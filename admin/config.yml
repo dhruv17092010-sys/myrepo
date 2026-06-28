@@ -1,0 +1,293 @@
+# ============================================================
+# Decap CMS Configuration — Velvet Whisk
+# ============================================================
+# HOW TO USE:
+# 1. Enable Netlify Identity on your site: Site Settings → Identity → Enable
+# 2. Enable Git Gateway: Identity → Services → Git Gateway → Enable
+# 3. Invite yourself as a user: Identity → Invite Users
+# 4. Visit yoursite.netlify.app/admin to log in and start editing
+# ============================================================
+
+backend:
+  name: git-gateway
+  branch: main        # Change to 'master' if your default branch is master
+
+# Where uploaded images are stored in your repository
+media_folder: "images/uploads"
+# How images are referenced in your content files (URL path)
+public_folder: "/images/uploads"
+
+# Uncomment and set your site URL for the "View Site" link in the admin
+# site_url: https://your-site.netlify.app
+# display_url: https://your-site.netlify.app
+
+collections:
+
+  # ===========================================================
+  # SITE CONTENT — hero text, phone, address, footer
+  # ===========================================================
+  - name: "site_content"
+    label: "⚙️ Site Content"
+    files:
+
+      - name: "homepage"
+        label: "Homepage Text & Settings"
+        file: "_data/site.json"
+        format: "json"
+        fields:
+          - label: "Hero — Title Part 1"
+            name: "hero_title_1"
+            widget: "string"
+            default: "Baked with"
+            hint: "First part of the hero headline, e.g. 'Baked with'"
+
+          - label: "Hero — Highlighted Word 1"
+            name: "hero_highlight_1"
+            widget: "string"
+            default: "Passion"
+            hint: "This word appears in pink italic, e.g. 'Passion'"
+
+          - label: "Hero — Title Part 2"
+            name: "hero_title_2"
+            widget: "string"
+            default: "Served with"
+            hint: "Second part of the headline, e.g. 'Served with'"
+
+          - label: "Hero — Highlighted Word 2"
+            name: "hero_highlight_2"
+            widget: "string"
+            default: "Love"
+            hint: "This word appears in pink italic, e.g. 'Love'"
+
+          - label: "Hero — Subtitle"
+            name: "hero_subtitle"
+            widget: "string"
+            default: "Experience the luxury of artisan bakes, delivered straight to your door via WhatsApp."
+
+          - label: "Hero — Primary Button Text"
+            name: "hero_cta"
+            widget: "string"
+            default: "Explore Our Menu"
+
+          - label: "Hero — Custom Cake Button Text"
+            name: "hero_cta_cake"
+            widget: "string"
+            default: "Order Custom Cake"
+
+          - label: "WhatsApp Number"
+            name: "whatsapp_number"
+            widget: "string"
+            default: "919797979797"
+            hint: "Country code + number only, no + or spaces. Example: 919797979797"
+
+          - label: "Phone (displayed on site)"
+            name: "phone_display"
+            widget: "string"
+            default: "+91 97979 79797"
+            hint: "How the number looks on the Contact section"
+
+          - label: "Address"
+            name: "address"
+            widget: "string"
+            default: "123 Baker Street, City"
+
+          - label: "Footer Tagline"
+            name: "footer_tagline"
+            widget: "string"
+            default: "Baking smiles, one crumb at a time."
+
+  # ===========================================================
+  # PRODUCTS — one file per category
+  # Each file has a list of product items you can add/edit/reorder
+  # ===========================================================
+  - name: "products"
+    label: "🧁 Products"
+    files:
+
+      # ----- Cakes & Cupcakes -----
+      - name: "cakes"
+        label: "Cakes & Cupcakes"
+        file: "_data/products/cakes.json"
+        format: "json"
+        fields:
+          - name: "items"
+            label: "Products in this category"
+            widget: "list"
+            summary: "{{fields.name}}  —  ₹{{fields.price}}"
+            fields:
+              - label: "Product Name"
+                name: "name"
+                widget: "string"
+                hint: "e.g. Chocolate Truffle Cake"
+              - label: "Price (₹)"
+                name: "price"
+                widget: "number"
+                value_type: "int"
+                min: 1
+              - label: "Short Description"
+                name: "desc"
+                widget: "string"
+                hint: "One line shown under the product name"
+              - label: "Product Image"
+                name: "image"
+                widget: "image"
+                hint: "Upload from your computer, or paste an image URL below"
+              - label: "Badges"
+                name: "badges"
+                widget: "select"
+                multiple: true
+                options:
+                  - { label: "🥚 Eggless", value: "eggless" }
+                  - { label: "🌿 Vegan", value: "vegan" }
+                required: false
+                default: []
+
+      # ----- Breads & Loaves -----
+      - name: "breads"
+        label: "Breads & Loaves"
+        file: "_data/products/breads.json"
+        format: "json"
+        fields:
+          - name: "items"
+            label: "Products in this category"
+            widget: "list"
+            summary: "{{fields.name}}  —  ₹{{fields.price}}"
+            fields:
+              - { label: "Product Name", name: "name", widget: "string" }
+              - { label: "Price (₹)", name: "price", widget: "number", value_type: "int", min: 1 }
+              - { label: "Short Description", name: "desc", widget: "string" }
+              - { label: "Product Image", name: "image", widget: "image" }
+              - label: "Badges"
+                name: "badges"
+                widget: "select"
+                multiple: true
+                options:
+                  - { label: "🥚 Eggless", value: "eggless" }
+                  - { label: "🌿 Vegan", value: "vegan" }
+                required: false
+                default: []
+
+      # ----- Pastries & Sweet Goods -----
+      - name: "pastries"
+        label: "Pastries & Sweet Goods"
+        file: "_data/products/pastries.json"
+        format: "json"
+        fields:
+          - name: "items"
+            label: "Products in this category"
+            widget: "list"
+            summary: "{{fields.name}}  —  ₹{{fields.price}}"
+            fields:
+              - { label: "Product Name", name: "name", widget: "string" }
+              - { label: "Price (₹)", name: "price", widget: "number", value_type: "int", min: 1 }
+              - { label: "Short Description", name: "desc", widget: "string" }
+              - { label: "Product Image", name: "image", widget: "image" }
+              - label: "Badges"
+                name: "badges"
+                widget: "select"
+                multiple: true
+                options:
+                  - { label: "🥚 Eggless", value: "eggless" }
+                  - { label: "🌿 Vegan", value: "vegan" }
+                required: false
+                default: []
+
+      # ----- Biscuits & Cookies -----
+      - name: "cookies"
+        label: "Biscuits & Cookies"
+        file: "_data/products/cookies.json"
+        format: "json"
+        fields:
+          - name: "items"
+            label: "Products in this category"
+            widget: "list"
+            summary: "{{fields.name}}  —  ₹{{fields.price}}"
+            fields:
+              - { label: "Product Name", name: "name", widget: "string" }
+              - { label: "Price (₹)", name: "price", widget: "number", value_type: "int", min: 1 }
+              - { label: "Short Description", name: "desc", widget: "string" }
+              - { label: "Product Image", name: "image", widget: "image" }
+              - label: "Badges"
+                name: "badges"
+                widget: "select"
+                multiple: true
+                options:
+                  - { label: "🥚 Eggless", value: "eggless" }
+                  - { label: "🌿 Vegan", value: "vegan" }
+                required: false
+                default: []
+
+      # ----- Muffins, Brownies & Doughnuts -----
+      - name: "muffins"
+        label: "Muffins, Brownies & Doughnuts"
+        file: "_data/products/muffins.json"
+        format: "json"
+        fields:
+          - name: "items"
+            label: "Products in this category"
+            widget: "list"
+            summary: "{{fields.name}}  —  ₹{{fields.price}}"
+            fields:
+              - { label: "Product Name", name: "name", widget: "string" }
+              - { label: "Price (₹)", name: "price", widget: "number", value_type: "int", min: 1 }
+              - { label: "Short Description", name: "desc", widget: "string" }
+              - { label: "Product Image", name: "image", widget: "image" }
+              - label: "Badges"
+                name: "badges"
+                widget: "select"
+                multiple: true
+                options:
+                  - { label: "🥚 Eggless", value: "eggless" }
+                  - { label: "🌿 Vegan", value: "vegan" }
+                required: false
+                default: []
+
+      # ----- Savory Baked Goods -----
+      - name: "savory"
+        label: "Savory Baked Goods"
+        file: "_data/products/savory.json"
+        format: "json"
+        fields:
+          - name: "items"
+            label: "Products in this category"
+            widget: "list"
+            summary: "{{fields.name}}  —  ₹{{fields.price}}"
+            fields:
+              - { label: "Product Name", name: "name", widget: "string" }
+              - { label: "Price (₹)", name: "price", widget: "number", value_type: "int", min: 1 }
+              - { label: "Short Description", name: "desc", widget: "string" }
+              - { label: "Product Image", name: "image", widget: "image" }
+              - label: "Badges"
+                name: "badges"
+                widget: "select"
+                multiple: true
+                options:
+                  - { label: "🥚 Eggless", value: "eggless" }
+                  - { label: "🌿 Vegan", value: "vegan" }
+                required: false
+                default: []
+
+      # ----- Dried Bakery Products -----
+      - name: "dried"
+        label: "Dried Bakery Products"
+        file: "_data/products/dried.json"
+        format: "json"
+        fields:
+          - name: "items"
+            label: "Products in this category"
+            widget: "list"
+            summary: "{{fields.name}}  —  ₹{{fields.price}}"
+            fields:
+              - { label: "Product Name", name: "name", widget: "string" }
+              - { label: "Price (₹)", name: "price", widget: "number", value_type: "int", min: 1 }
+              - { label: "Short Description", name: "desc", widget: "string" }
+              - { label: "Product Image", name: "image", widget: "image" }
+              - label: "Badges"
+                name: "badges"
+                widget: "select"
+                multiple: true
+                options:
+                  - { label: "🥚 Eggless", value: "eggless" }
+                  - { label: "🌿 Vegan", value: "vegan" }
+                required: false
+                default: []

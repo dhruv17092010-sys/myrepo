@@ -1,0 +1,24 @@
+# ============================================================
+# Netlify Configuration — Velvet Whisk
+# ============================================================
+# IMPORTANT: This file must be at the ROOT of your repository.
+# If your project was previously inside a subfolder (e.g. /website/),
+# move everything out to the root and delete the subfolder.
+# ============================================================
+
+[build]
+  # No build command — this is a pure static site
+  publish = "."
+
+# Allow Decap CMS admin to always serve fresh content
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Allow _data JSON files to be fetched by the browser
+[[headers]]
+  for = "/_data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=60"
+    Access-Control-Allow-Origin = "*"

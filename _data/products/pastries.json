@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "name": "Fruit Danish",
+      "price": 180,
+      "image": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80",
+      "desc": "Fresh fruits on flaky pastry.",
+      "badges": []
+    },
+    {
+      "name": "Cream Puff",
+      "price": 140,
+      "image": "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=800&q=80",
+      "desc": "Light choux with vanilla cream.",
+      "badges": []
+    },
+    {
+      "name": "Apple Turnover",
+      "price": 160,
+      "image": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80",
+      "desc": "Warm spiced apple filling.",
+      "badges": ["vegan"]
+    },
+    {
+      "name": "Eclair",
+      "price": 150,
+      "image": "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=800&q=80",
+      "desc": "Chocolate glazed perfection.",
+      "badges": []
+    }
+  ]
+}
