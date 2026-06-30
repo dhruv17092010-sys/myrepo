@@ -409,11 +409,19 @@
         }
 
         /* Regular order items */
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 0.5rem;
+        }
+
         .items-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.83rem;
             margin-bottom: 0.5rem;
+            min-width: 360px;
         }
 
         .items-table th {
@@ -563,9 +571,41 @@
         /* ── Responsive ─────────────────────────────────────── */
         @media (max-width: 600px) {
             header { padding: 0.9rem 1rem; }
+            .header-left h1 { font-size: 1.05rem; }
             main   { padding: 1.25rem 1rem; }
-            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+            .stat-card { padding: 1rem; gap: 0.75rem; }
+            .stat-icon { width: 40px; height: 40px; font-size: 1.1rem; }
+            .stat-info h3 { font-size: 1.3rem; }
             .customer-info { gap: 0.75rem; }
+
+            /* Controls: stack filter tabs above a full-width refresh button */
+            .controls-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+            .filter-tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                justify-content: flex-start;
+            }
+            .filter-tab { white-space: nowrap; }
+            .refresh-btn { justify-content: center; width: 100%; }
+
+            /* Order card header: let badges wrap, push action buttons full width */
+            .order-header { padding: 0.85rem 1rem; }
+            .order-header-right { width: 100%; }
+            .btn-status { flex: 1; text-align: center; }
+            .order-body { padding: 1rem; }
+
+            .cake-detail-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+        }
+
+        @media (max-width: 380px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .login-card { padding: 2rem 1.5rem; }
+            .order-meta { gap: 0.5rem; }
         }
     </style>
 </head>
@@ -854,7 +894,7 @@ function buildOrderCard(order) {
         // Items table
         const items = Array.isArray(order.items) ? order.items : [];
         if (items.length > 0) {
-            bodyHTML += `<table class="items-table">
+            bodyHTML += `<div class="table-scroll"><table class="items-table">
                 <thead>
                     <tr>
                         <th>Item</th>
@@ -871,15 +911,22 @@ function buildOrderCard(order) {
                         <td style="text-align:right">₹${item.subtotal}</td>
                     </tr>`).join('')}
                 </tbody>
-            </table>
+            </table></div>
             <div class="order-total">Total: ₹${order.total}</div>`;
         }
 
     } else {
         // Custom cake
+        bodyHTML += `<div class="customer-info">
+            ${order.customer_name ? `<div class="customer-info-item"><i class="fas fa-user"></i> ${escHtml(order.customer_name)}</div>` : ''}
+            ${order.phone ? `<div class="customer-info-item"><i class="fas fa-phone"></i> ${escHtml(order.phone)}</div>` : ''}
+            ${order.address ? `<div class="customer-info-item"><i class="fas fa-map-marker-alt"></i> ${escHtml(order.address)}</div>` : ''}
+        </div>`;
+
         bodyHTML += `<div class="cake-detail-grid">
             ${order.cake_weight  ? `<div class="cake-detail-item"><label>Weight</label><span>${escHtml(order.cake_weight)} Kg</span></div>` : ''}
             ${order.cake_flavor  ? `<div class="cake-detail-item"><label>Flavor</label><span>${escHtml(order.cake_flavor)}</span></div>` : ''}
+            ${order.cake_type    ? `<div class="cake-detail-item"><label>Type</label><span>${escHtml(order.cake_type)}</span></div>` : ''}
             ${order.cake_notes   ? `<div class="cake-detail-item" style="grid-column: 1 / -1;"><label>Special Instructions</label><span style="font-weight:400; font-size:0.85rem;">${escHtml(order.cake_notes)}</span></div>` : ''}
         </div>`;
 

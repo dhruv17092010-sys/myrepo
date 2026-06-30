@@ -5,6 +5,9 @@
 // --- Default Configuration ---
 const IMGBB_API_KEY = "85d2b64330c82ad0a82284b10bacc47c";
 
+// WhatsApp number used by checkout.html (overwritten by site.json if present)
+let SITE_WHATSAPP_NUMBER = "919797979797";
+
 // --- Supabase Client ---
 // supabase-config.js (loaded before this file) provides SUPABASE_URL and SUPABASE_ANON_KEY
 let supabaseClient = null;
@@ -84,6 +87,9 @@ async function loadSiteContent() {
             const addr = document.getElementById('footer-address');
             if (addr) addr.textContent = data.address;
         }
+        if (data.whatsapp_number) {
+            SITE_WHATSAPP_NUMBER = data.whatsapp_number;
+        }
     } catch (err) {
         console.log('site.json not found, using HTML defaults.');
     }
@@ -159,6 +165,7 @@ function renderProducts() {
     attachAddToCartListeners();
     revealOnScroll();
     attachMagneticEffect();
+    applyFilters(); // Apply filters after rendering products
 }
 
 function attachAddToCartListeners() {
@@ -202,9 +209,6 @@ const cartItemsContainer   = document.getElementById('cartItems');
 const cartCountEl          = document.querySelector('.cart-count');
 const cartTotalEl          = document.getElementById('cartTotal');
 const checkoutBtn          = document.getElementById('checkoutBtn');
-const checkoutModal        = document.getElementById('checkoutModal');
-const closeModalBtn        = document.getElementById('closeModal');
-const checkoutForm         = document.getElementById('checkoutForm');
 
 cartBtn.addEventListener('click', () => {
     cartSidebar.classList.add('active');
@@ -259,75 +263,18 @@ function updateCartUI() {
     });
 }
 
-checkoutBtn.addEventListener('click', () => {
-    if (cart.length === 0) return;
-    closeCartPanel();
-    checkoutModal.classList.add('active');
-});
-
-closeModalBtn.addEventListener('click', () => {
-    checkoutModal.classList.remove('active');
-});
-
-checkoutModal.addEventListener('click', (e) => {
-    if (e.target === checkoutModal) checkoutModal.classList.remove('active');
-});
-
-// ============================================================
-// CHECKOUT FORM — Submit to Supabase
-// ============================================================
-checkoutForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const submitBtn = checkoutForm.querySelector('button[type="submit"]');
-    const name    = document.getElementById('custName').value.trim();
-    const phone   = document.getElementById('custPhone').value.trim();
-    const address = document.getElementById('custAddress').value.trim();
-
-    let total = 0;
-    const orderItems = cart.map(item => {
-        total += item.price * item.qty;
-        return { name: item.name, qty: item.qty, price: item.price, subtotal: item.price * item.qty };
+if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', () => {
+        if (cart.length === 0) return;
+        closeCartPanel();
+        // Redirect to checkout page
+        window.location.href = 'checkout.html';
     });
+}
 
-    // Show loading state
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Order…';
-
-    try {
-        if (!supabaseClient) throw new Error('Supabase not initialised. Check supabase-config.js.');
-
-        const { error } = await supabaseClient
-            .from('orders')
-            .insert([{
-                order_type:     'regular',
-                customer_name:  name,
-                phone:          phone,
-                address:        address,
-                items:          orderItems,
-                total:          total,
-                status:         'pending'
-            }]);
-
-        if (error) throw error;
-
-        // ✅ Success
-        cart = [];
-        saveCartToStorage();
-        updateCartUI();
-        checkoutForm.reset();
-        checkoutModal.classList.remove('active');
-        showSuccessModal('🎉 Order Placed!', `Thank you, ${name}! Your order has been received. We'll contact you at <strong>${phone}</strong> to confirm delivery.`);
-
-    } catch (err) {
-        console.error('Order submission failed:', err);
-        alert('Sorry, something went wrong. Please try again or call us directly.');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'Place Order <i class="fas fa-check"></i>';
-    }
-});
-
+// ============================================================
+// CHECKOUT FORM — Submit to Supabase (removed - now on checkout.html)
+// ============================================================
 // ============================================================
 // CUSTOM CAKE FORM — Submit to Supabase
 // ============================================================
@@ -338,87 +285,101 @@ const uploadProgress   = document.getElementById('uploadProgress');
 const progressBar      = document.querySelector('.progress-bar');
 let uploadedImageUrl   = '';
 
-fileInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+// This entire section only applies to index.html (which has the custom cake
+// form). Guarding it stops script.js from crashing — and silently skipping
+// everything below it — on pages like checkout.html that don't have this form.
+if (customForm && fileInput) {
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
-    fileNameSpan.textContent = file.name;
-    uploadProgress.style.display = 'block';
-    progressBar.classList.add('uploading');
+        fileNameSpan.textContent = file.name;
+        uploadProgress.style.display = 'block';
+        progressBar.classList.add('uploading');
 
-    try {
-        const formData = new FormData();
-        formData.append('image', file);
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
 
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-            method: 'POST', body: formData
-        });
-        const data = await response.json();
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                method: 'POST', body: formData
+            });
+            const data = await response.json();
 
-        if (data.success) {
-            uploadedImageUrl = data.data.url;
-            fileNameSpan.textContent = `✓ ${file.name} (Uploaded)`;
-            fileNameSpan.style.color = 'var(--eggless)';
-        } else {
-            throw new Error('Upload failed');
+            if (data.success) {
+                uploadedImageUrl = data.data.url;
+                fileNameSpan.textContent = `✓ ${file.name} (Uploaded)`;
+                fileNameSpan.style.color = 'var(--eggless)';
+            } else {
+                throw new Error('Upload failed');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            fileNameSpan.textContent = `✗ Upload failed — ${file.name}`;
+            fileNameSpan.style.color = '#ff4d4d';
+            uploadedImageUrl = '';
+            alert('Image upload failed. You can still place the order and share the image when we contact you.');
+        } finally {
+            uploadProgress.style.display = 'none';
+            progressBar.classList.remove('uploading');
         }
-    } catch (error) {
-        console.error('Upload error:', error);
-        fileNameSpan.textContent = `✗ Upload failed — ${file.name}`;
-        fileNameSpan.style.color = '#ff4d4d';
-        uploadedImageUrl = '';
-        alert('Image upload failed. You can still place the order and share the image when we contact you.');
-    } finally {
-        uploadProgress.style.display = 'none';
-        progressBar.classList.remove('uploading');
-    }
-});
+    });
 
-customForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+    customForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-    const submitBtn = customForm.querySelector('button[type="submit"]');
-    const weight    = document.getElementById('cakeWeight').value;
-    const flavor    = document.getElementById('cakeFlavor').value;
-    const notes     = document.getElementById('cakeNotes').value.trim();
+        const submitBtn = customForm.querySelector('button[type="submit"]');
+        const nameEl      = document.getElementById('cakeName');
+        const name        = nameEl ? nameEl.value.trim() : null;
+        const weight      = document.getElementById('cakeWeight').value;
+        const flavor      = document.getElementById('cakeFlavor').value;
+        const cakeType    = document.getElementById('cakeType').value;
+        const phone       = document.getElementById('cakePhone').value.trim();
+        const address     = document.getElementById('cakeAddress').value.trim();
+        const paymentMethod = document.getElementById('cakePayment').value;
+        const whatsappUpdates = document.getElementById('cakeWhatsappUpdates').checked;
+        const notes       = document.getElementById('cakeNotes').value.trim();
 
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending Request…';
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending Request…';
 
-    try {
-        if (!supabaseClient) throw new Error('Supabase not initialised. Check supabase-config.js.');
+        try {
+            if (!supabaseClient) throw new Error('Supabase not initialised. Check supabase-config.js.');
 
-        const { error } = await supabaseClient
-            .from('orders')
-            .insert([{
-                order_type:           'custom',
-                customer_name:        null,   // custom form doesn't ask name — add a field if you want
-                phone:                null,
-                address:              null,
-                cake_weight:          weight,
-                cake_flavor:          flavor,
-                cake_notes:           notes || null,
-                reference_image_url:  uploadedImageUrl || null,
-                status:               'pending'
-            }]);
+            const { error } = await supabaseClient
+                .from('orders')
+                .insert([{
+                    order_type:           'custom',
+                    customer_name:        name || null,
+                    phone:                phone,
+                    address:              address,
+                    cake_weight:          weight,
+                    cake_flavor:          flavor,
+                    cake_type:            cakeType,
+                    cake_notes:           notes || null,
+                    reference_image_url:  uploadedImageUrl || null,
+                    status:               'pending'
+                    // Note: payment_method and whatsapp_updates are NOT sent to backend as requested
+                }]);
 
-        if (error) throw error;
+            if (error) throw error;
 
-        // ✅ Success
-        customForm.reset();
-        fileNameSpan.textContent = 'Click to upload image';
-        fileNameSpan.style.color = '';
-        uploadedImageUrl = '';
-        showSuccessModal('🎂 Custom Cake Request Sent!', 'We received your custom cake details and will reach out shortly to confirm the design, price, and delivery date.');
+            // ✅ Success
+            customForm.reset();
+            fileNameSpan.textContent = 'Click to upload image';
+            fileNameSpan.style.color = '';
+            uploadedImageUrl = '';
+            showSuccessModal('🎂 Custom Cake Request Sent!', 'We received your custom cake details and will reach out shortly to confirm the design, price, and delivery date.');
 
-    } catch (err) {
-        console.error('Custom order submission failed:', err);
-        alert('Sorry, something went wrong. Please try again or call us directly.');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'Send Request <i class="fas fa-paper-plane"></i>';
-    }
-});
+        } catch (err) {
+            console.error('Custom order submission failed:', err);
+            alert('Sorry, something went wrong. Please try again or call us directly.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Send Request <i class="fas fa-paper-plane"></i>';
+        }
+    });
+}
 
 // ============================================================
 // Success Modal helper
@@ -444,17 +405,95 @@ document.getElementById('successModal')?.addEventListener('click', (e) => {
 });
 
 // ============================================================
-// View More → WhatsApp enquiry kept as-is (enquiry, not order)
+// Search & Filter Functionality
 // ============================================================
-document.querySelectorAll('.view-more-btn').forEach(btn => {
+let currentBadgeFilter = 'all';
+let currentCategoryFilter = 'all';
+let currentSearchQuery = '';
+
+function applyFilters() {
+    const categorySections = document.querySelectorAll('.category-section');
+    
+    categorySections.forEach(section => {
+        const sectionCategory = section.dataset.category;
+        const grid = section.querySelector('.menu-grid');
+        const cards = grid.querySelectorAll('.product-card');
+        let visibleCardsInCategory = 0;
+        
+        // Check if category matches
+        const categoryMatches = currentCategoryFilter === 'all' || currentCategoryFilter === sectionCategory;
+        
+        if (!categoryMatches) {
+            section.classList.add('hidden');
+            return;
+        } else {
+            section.classList.remove('hidden');
+        }
+        
+        cards.forEach(card => {
+            const name = card.querySelector('h3').textContent.toLowerCase();
+            const desc = card.querySelector('p').textContent.toLowerCase();
+            const badges = card.querySelectorAll('.badge');
+            
+            // Check badge filter
+            let badgeMatches = true;
+            if (currentBadgeFilter !== 'all') {
+                badgeMatches = Array.from(badges).some(badge => badge.classList.contains(currentBadgeFilter));
+            }
+            
+            // Check search query
+            const searchMatches = currentSearchQuery === '' || 
+                                  name.includes(currentSearchQuery) || 
+                                  desc.includes(currentSearchQuery);
+            
+            if (badgeMatches && searchMatches) {
+                card.style.display = '';
+                visibleCardsInCategory++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Hide category section if no products match
+        if (visibleCardsInCategory === 0) {
+            section.classList.add('hidden');
+        }
+    });
+}
+
+// Search input handler
+const productSearchInput = document.getElementById('productSearch');
+if (productSearchInput) {
+    productSearchInput.addEventListener('input', (e) => {
+        currentSearchQuery = e.target.value.toLowerCase().trim();
+        applyFilters();
+    });
+}
+
+// Badge filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-        const label = e.currentTarget.dataset.label || e.currentTarget.dataset.category;
-        const message = `Hi! 👋 I'd like to explore more options from your *${label}* collection at Velvet Whisk. Could you share more details? 🙏`;
-        const WHATSAPP_NUMBER = '919797979797';
-        const whatsappURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappURL, '_blank');
+        // Remove active class from all buttons
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        // Add active class to clicked button
+        e.currentTarget.classList.add('active');
+        currentBadgeFilter = e.currentTarget.dataset.filter;
+        applyFilters();
     });
 });
+
+// Category filter dropdown
+const categoryFilterSelect = document.getElementById('categoryFilter');
+if (categoryFilterSelect) {
+    categoryFilterSelect.addEventListener('change', (e) => {
+        currentCategoryFilter = e.target.value;
+        applyFilters();
+    });
+}
+
+// ============================================================
+// View More → WhatsApp enquiry REMOVED (buttons removed from HTML)
+// ============================================================
 
 // ============================================================
 // Hamburger / Mobile Nav
@@ -495,44 +534,47 @@ document.querySelectorAll('.mobile-nav-link').forEach(link => {
 // Particle System (Flour Dust Effect)
 // ============================================================
 const canvas = document.getElementById('particleCanvas');
-const ctx    = canvas.getContext('2d');
-let particles = [];
 
-function resizeCanvas() {
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+if (canvas) {
+    const ctx = canvas.getContext('2d');
+    let particles = [];
 
-if (!('ontouchstart' in window)) {
-    window.addEventListener('mousemove', (e) => {
-        for (let i = 0; i < 2; i++) { particles.push(new Particle(e.clientX, e.clientY)); }
-    });
-}
+    const resizeCanvas = () => {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-class Particle {
-    constructor(x, y) {
-        this.x = x; this.y = y;
-        this.size   = Math.random() * 3 + 1;
-        this.speedX = Math.random() * 2 - 1;
-        this.speedY = Math.random() * 2 - 1;
-        this.color  = `rgba(253, 248, 245, ${Math.random() * 0.5 + 0.3})`;
-        this.life   = 100;
+    if (!('ontouchstart' in window)) {
+        window.addEventListener('mousemove', (e) => {
+            for (let i = 0; i < 2; i++) { particles.push(new Particle(e.clientX, e.clientY)); }
+        });
     }
-    update() { this.x += this.speedX; this.y += this.speedY; this.life -= 1; this.size *= 0.98; }
-    draw() { ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
-}
 
-function animateParticles() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].update(); particles[i].draw();
-        if (particles[i].life <= 0 || particles[i].size <= 0.1) particles.splice(i, 1);
+    class Particle {
+        constructor(x, y) {
+            this.x = x; this.y = y;
+            this.size   = Math.random() * 3 + 1;
+            this.speedX = Math.random() * 2 - 1;
+            this.speedY = Math.random() * 2 - 1;
+            this.color  = `rgba(253, 248, 245, ${Math.random() * 0.5 + 0.3})`;
+            this.life   = 100;
+        }
+        update() { this.x += this.speedX; this.y += this.speedY; this.life -= 1; this.size *= 0.98; }
+        draw() { ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
     }
-    requestAnimationFrame(animateParticles);
+
+    function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = particles.length - 1; i >= 0; i--) {
+            particles[i].update(); particles[i].draw();
+            if (particles[i].life <= 0 || particles[i].size <= 0.1) particles.splice(i, 1);
+        }
+        requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
 }
-animateParticles();
 
 // ============================================================
 // Scroll Reveal
@@ -577,6 +619,7 @@ async function init() {
     await loadSiteContent();
     await loadAllProducts();
     attachMagneticEffect();
+    applyFilters(); // Initialize filters after products are loaded
 }
 
 init();
