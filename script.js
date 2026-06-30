@@ -264,16 +264,20 @@ checkoutBtn.addEventListener('click', () => {
     if (cart.length === 0) return;
     closeCartPanel();
     updateCheckoutProductsSummary();
-    checkoutModal.classList.add('active');
+    if (checkoutModal) checkoutModal.classList.add('active');
 });
 
-closeModalBtn.addEventListener('click', () => {
-    checkoutModal.classList.remove('active');
-});
+if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+        if (checkoutModal) checkoutModal.classList.remove('active');
+    });
+}
 
-checkoutModal.addEventListener('click', (e) => {
-    if (e.target === checkoutModal) checkoutModal.classList.remove('active');
-});
+if (checkoutModal) {
+    checkoutModal.addEventListener('click', (e) => {
+        if (e.target === checkoutModal) checkoutModal.classList.remove('active');
+    });
+}
 
 // Function to display products summary in checkout modal
 function updateCheckoutProductsSummary() {
