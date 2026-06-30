@@ -292,7 +292,7 @@
                 <span>Total:</span>
                 <span id="cartTotal">₹0</span>
             </div>
-            <button class="btn-magnetic btn-full" id="checkoutBtn">Checkout via WhatsApp <i class="fab fa-whatsapp"></i></button>
+            <button class="btn-magnetic btn-full" id="checkoutBtn">Proceed to Checkout <i class="fas fa-arrow-right"></i></button>
         </div>
     </div>
 
@@ -306,12 +306,26 @@
                 <textarea id="custAddress" placeholder="Delivery Address" required></textarea>
                 <div class="modal-btns">
                     <button type="button" class="btn-secondary" id="closeModal">Cancel</button>
-                    <button type="submit" class="btn-magnetic">Place Order <i class="fab fa-whatsapp"></i></button>
+                    <button type="submit" class="btn-magnetic">Place Order <i class="fas fa-check"></i></button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Success Modal (shown after order is placed) -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-content" style="text-align:center; padding: 2.5rem 2rem;">
+            <div style="font-size:3rem; margin-bottom:0.75rem;">✅</div>
+            <h3 id="successTitle">Order Placed!</h3>
+            <p id="successMessage" style="margin:1rem 0 1.5rem; color:var(--text-light); line-height:1.6;"></p>
+            <button class="btn-magnetic" id="closeSuccessModal" style="min-width:140px;">Great, Thanks!</button>
+        </div>
+    </div>
+
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Your Supabase project credentials (fill in supabase-config.js) -->
+    <script src="supabase-config.js"></script>
     <script src="script.js"></script>
     <!-- Netlify Identity redirect script -->
     <script>

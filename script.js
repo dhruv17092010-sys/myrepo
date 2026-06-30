@@ -1,10 +1,21 @@
 // ============================================================
-// Velvet Whisk — script.js
+// Velvet Whisk — script.js  (Supabase edition)
 // ============================================================
 
-// --- Default Configuration (overridden by _data/site.json) ---
-let WHATSAPP_NUMBER = "919797979797";
+// --- Default Configuration ---
 const IMGBB_API_KEY = "85d2b64330c82ad0a82284b10bacc47c";
+
+// --- Supabase Client ---
+// supabase-config.js (loaded before this file) provides SUPABASE_URL and SUPABASE_ANON_KEY
+let supabaseClient = null;
+
+function initSupabase() {
+    try {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (e) {
+        console.error('Supabase init failed. Did you fill in supabase-config.js?', e);
+    }
+}
 
 // --- Products (populated from _data/products/*.json via CMS) ---
 const products = {
@@ -13,19 +24,15 @@ const products = {
 };
 
 // ============================================================
-// CHANGE 4: Cart with localStorage persistence
+// Cart with localStorage persistence
 // ============================================================
 let cart = [];
 
 function loadCartFromStorage() {
     try {
         const stored = localStorage.getItem('velvetwhisk_cart');
-        if (stored) {
-            cart = JSON.parse(stored);
-        }
-    } catch (e) {
-        cart = [];
-    }
+        if (stored) { cart = JSON.parse(stored); }
+    } catch (e) { cart = []; }
 }
 
 function saveCartToStorage() {
@@ -37,20 +44,14 @@ function saveCartToStorage() {
 }
 
 // ============================================================
-// CHANGE 5: Load site content + products from CMS JSON files
+// Load site content + products from CMS JSON files
 // ============================================================
 async function loadSiteContent() {
     try {
         const res = await fetch('/_data/site.json');
-        if (!res.ok) return; // Fall back to HTML defaults gracefully
+        if (!res.ok) return;
         const data = await res.json();
 
-        // Update WhatsApp number for all buttons
-        if (data.whatsapp_number) {
-            WHATSAPP_NUMBER = data.whatsapp_number;
-        }
-
-        // Hero title
         if (data.hero_title_1 && data.hero_highlight_1) {
             const heroTitle = document.getElementById('hero-title');
             if (heroTitle) {
@@ -59,28 +60,18 @@ async function loadSiteContent() {
                     ` ${data.hero_title_2 || 'Served with'} <span class="highlight">${data.hero_highlight_2 || 'Love'}</span>.`;
             }
         }
-
-        // Hero subtitle
         if (data.hero_subtitle) {
             const sub = document.getElementById('hero-subtitle');
             if (sub) sub.textContent = data.hero_subtitle;
         }
-
-        // Hero CTA button labels
         if (data.hero_cta) {
             const exploreBtn = document.getElementById('hero-cta-explore');
-            if (exploreBtn) {
-                exploreBtn.innerHTML = `${data.hero_cta} <i class="fas fa-arrow-right"></i>`;
-            }
+            if (exploreBtn) exploreBtn.innerHTML = `${data.hero_cta} <i class="fas fa-arrow-right"></i>`;
         }
         if (data.hero_cta_cake) {
             const cakeBtn = document.getElementById('hero-cta-cake');
-            if (cakeBtn) {
-                cakeBtn.innerHTML = `${data.hero_cta_cake} <i class="fas fa-cake-candles"></i>`;
-            }
+            if (cakeBtn) cakeBtn.innerHTML = `${data.hero_cta_cake} <i class="fas fa-cake-candles"></i>`;
         }
-
-        // Footer
         if (data.footer_tagline) {
             const tagline = document.getElementById('footer-tagline');
             if (tagline) tagline.textContent = data.footer_tagline;
@@ -94,51 +85,35 @@ async function loadSiteContent() {
             if (addr) addr.textContent = data.address;
         }
     } catch (err) {
-        // Site content file doesn't exist yet — HTML defaults remain
         console.log('site.json not found, using HTML defaults.');
     }
 }
 
 async function loadAllProducts() {
-    const categoryMap = {
-        cakes: 'cakes',
-        breads: 'breads',
-        pastries: 'pastries',
-        cookies: 'cookies',
-        muffins: 'muffins',
-        savory: 'savory',
-        dried: 'dried'
-    };
-
-    const fetches = Object.keys(categoryMap).map(async (cat) => {
+    const categories = ['cakes', 'breads', 'pastries', 'cookies', 'muffins', 'savory', 'dried'];
+    const fetches = categories.map(async (cat) => {
         try {
             const res = await fetch(`/_data/products/${cat}.json`);
             if (!res.ok) return;
             const data = await res.json();
-            // Assign stable IDs: category-index
             products[cat] = (data.items || []).map((p, i) => ({
-                ...p,
-                id: `${cat}-${i}`,
-                price: Number(p.price) || 0
+                ...p, id: `${cat}-${i}`, price: Number(p.price) || 0
             }));
         } catch (e) {
-            // If JSON doesn't exist yet, leave category empty
             console.log(`No product data found for: ${cat}`);
         }
     });
-
     await Promise.all(fetches);
     renderProducts();
 }
 
 // ============================================================
-// Render Products into the DOM
+// Render Products
 // ============================================================
 function renderProducts() {
     Object.keys(products).forEach(category => {
         const grid = document.getElementById(`${category}-grid`);
         if (!grid) return;
-
         grid.innerHTML = '';
 
         if (products[category].length === 0) {
@@ -181,11 +156,8 @@ function renderProducts() {
         });
     });
 
-    // Re-attach add-to-cart listeners after render
     attachAddToCartListeners();
-    // Re-run reveal for newly rendered sections
     revealOnScroll();
-    // Re-attach magnetic effects
     attachMagneticEffect();
 }
 
@@ -203,10 +175,9 @@ function attachAddToCartListeners() {
                 cart.push({ ...product, qty: 1 });
             }
 
-            saveCartToStorage(); // CHANGE 4: persist immediately
+            saveCartToStorage();
             updateCartUI();
 
-            // Visual feedback
             const btn = e.currentTarget;
             btn.textContent = 'Added! ✓';
             btn.style.background = 'var(--pink-dark)';
@@ -223,17 +194,17 @@ function attachAddToCartListeners() {
 // ============================================================
 // Cart UI
 // ============================================================
-const cartBtn = document.getElementById('openCart');
-const cartSidebar = document.getElementById('cartSidebar');
-const cartOverlay = document.getElementById('cartOverlay');
-const closeCartBtn = document.getElementById('closeCart');
-const cartItemsContainer = document.getElementById('cartItems');
-const cartCountEl = document.querySelector('.cart-count');
-const cartTotalEl = document.getElementById('cartTotal');
-const checkoutBtn = document.getElementById('checkoutBtn');
-const checkoutModal = document.getElementById('checkoutModal');
-const closeModalBtn = document.getElementById('closeModal');
-const checkoutForm = document.getElementById('checkoutForm');
+const cartBtn              = document.getElementById('openCart');
+const cartSidebar          = document.getElementById('cartSidebar');
+const cartOverlay          = document.getElementById('cartOverlay');
+const closeCartBtn         = document.getElementById('closeCart');
+const cartItemsContainer   = document.getElementById('cartItems');
+const cartCountEl          = document.querySelector('.cart-count');
+const cartTotalEl          = document.getElementById('cartTotal');
+const checkoutBtn          = document.getElementById('checkoutBtn');
+const checkoutModal        = document.getElementById('checkoutModal');
+const closeModalBtn        = document.getElementById('closeModal');
+const checkoutForm         = document.getElementById('checkoutForm');
 
 cartBtn.addEventListener('click', () => {
     cartSidebar.classList.add('active');
@@ -282,13 +253,12 @@ function updateCartUI() {
         btn.addEventListener('click', (e) => {
             const index = parseInt(e.currentTarget.dataset.index);
             cart.splice(index, 1);
-            saveCartToStorage(); // CHANGE 4: persist after removal
+            saveCartToStorage();
             updateCartUI();
         });
     });
 }
 
-// Checkout
 checkoutBtn.addEventListener('click', () => {
     if (cart.length === 0) return;
     closeCartPanel();
@@ -303,105 +273,70 @@ checkoutModal.addEventListener('click', (e) => {
     if (e.target === checkoutModal) checkoutModal.classList.remove('active');
 });
 
-checkoutForm.addEventListener('submit', (e) => {
+// ============================================================
+// CHECKOUT FORM — Submit to Supabase
+// ============================================================
+checkoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const name = document.getElementById('custName').value.trim();
-    const phone = document.getElementById('custPhone').value.trim();
+    const submitBtn = checkoutForm.querySelector('button[type="submit"]');
+    const name    = document.getElementById('custName').value.trim();
+    const phone   = document.getElementById('custPhone').value.trim();
     const address = document.getElementById('custAddress').value.trim();
 
-    let message = `🧁 *New Order from Velvet Whisk Website* 🧁\n\n`;
-    message += `🛒 *Order Details:*\n`;
-
     let total = 0;
-    cart.forEach(item => {
-        message += `- ${item.qty}× ${item.name} (₹${item.price * item.qty})\n`;
+    const orderItems = cart.map(item => {
         total += item.price * item.qty;
+        return { name: item.name, qty: item.qty, price: item.price, subtotal: item.price * item.qty };
     });
 
-    message += `\n💰 *Total:* ₹${total}\n\n`;
-    message += `👤 *Customer Details:*\n`;
-    message += `Name: ${name}\n`;
-    message += `Phone: ${phone}\n`;
-    message += `Address: ${address}`;
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Order…';
 
-    const whatsappURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappURL, '_blank');
+    try {
+        if (!supabaseClient) throw new Error('Supabase not initialised. Check supabase-config.js.');
 
-    // Clear cart after placing order
-    cart = [];
-    saveCartToStorage(); // CHANGE 4: clear persisted cart on checkout
-    updateCartUI();
-    checkoutForm.reset();
-    checkoutModal.classList.remove('active');
-});
+        const { error } = await supabaseClient
+            .from('orders')
+            .insert([{
+                order_type:     'regular',
+                customer_name:  name,
+                phone:          phone,
+                address:        address,
+                items:          orderItems,
+                total:          total,
+                status:         'pending'
+            }]);
 
-// ============================================================
-// CHANGE 1: View More → WhatsApp enquiry (no dummy products)
-// ============================================================
-document.querySelectorAll('.view-more-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        const label = e.currentTarget.dataset.label || e.currentTarget.dataset.category;
-        const message = `Hi! 👋 I'd like to explore more options from your *${label}* collection at Velvet Whisk. Could you share more details? 🙏`;
-        const whatsappURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappURL, '_blank');
-    });
-});
+        if (error) throw error;
 
-// ============================================================
-// CHANGE 3: Hamburger / Mobile Nav
-// ============================================================
-const hamburgerBtn = document.getElementById('hamburgerBtn');
-const mobileNav = document.getElementById('mobileNav');
-const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
-const closeMobileNavBtn = document.getElementById('closeMobileNav');
+        // ✅ Success
+        cart = [];
+        saveCartToStorage();
+        updateCartUI();
+        checkoutForm.reset();
+        checkoutModal.classList.remove('active');
+        showSuccessModal('🎉 Order Placed!', `Thank you, ${name}! Your order has been received. We'll contact you at <strong>${phone}</strong> to confirm delivery.`);
 
-function openMobileNav() {
-    mobileNav.classList.add('active');
-    mobileMenuOverlay.classList.add('active');
-    hamburgerBtn.classList.add('is-active');
-    hamburgerBtn.setAttribute('aria-expanded', 'true');
-    mobileNav.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden'; // Prevent background scroll
-}
-
-function closeMobileNav() {
-    mobileNav.classList.remove('active');
-    mobileMenuOverlay.classList.remove('active');
-    hamburgerBtn.classList.remove('is-active');
-    hamburgerBtn.setAttribute('aria-expanded', 'false');
-    mobileNav.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-}
-
-hamburgerBtn.addEventListener('click', () => {
-    if (mobileNav.classList.contains('active')) {
-        closeMobileNav();
-    } else {
-        openMobileNav();
+    } catch (err) {
+        console.error('Order submission failed:', err);
+        alert('Sorry, something went wrong. Please try again or call us directly.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Place Order <i class="fas fa-check"></i>';
     }
 });
 
-closeMobileNavBtn.addEventListener('click', closeMobileNav);
-mobileMenuOverlay.addEventListener('click', closeMobileNav);
-
-// Close mobile nav when a link is tapped
-document.querySelectorAll('.mobile-nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-        closeMobileNav();
-    });
-});
-
 // ============================================================
-// Custom Cake Form with Image Upload
+// CUSTOM CAKE FORM — Submit to Supabase
 // ============================================================
-const customForm = document.getElementById('customCakeForm');
-const fileInput = document.getElementById('cakeImage');
-const fileNameSpan = document.getElementById('fileName');
-const uploadProgress = document.getElementById('uploadProgress');
-const progressBar = document.querySelector('.progress-bar');
-
-let uploadedImageUrl = '';
+const customForm       = document.getElementById('customCakeForm');
+const fileInput        = document.getElementById('cakeImage');
+const fileNameSpan     = document.getElementById('fileName');
+const uploadProgress   = document.getElementById('uploadProgress');
+const progressBar      = document.querySelector('.progress-bar');
+let uploadedImageUrl   = '';
 
 fileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
@@ -416,10 +351,8 @@ fileInput.addEventListener('change', async (e) => {
         formData.append('image', file);
 
         const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-            method: 'POST',
-            body: formData
+            method: 'POST', body: formData
         });
-
         const data = await response.json();
 
         if (data.success) {
@@ -434,108 +367,171 @@ fileInput.addEventListener('change', async (e) => {
         fileNameSpan.textContent = `✗ Upload failed — ${file.name}`;
         fileNameSpan.style.color = '#ff4d4d';
         uploadedImageUrl = '';
-        alert('Image upload failed. You can still place the order and share the image manually on WhatsApp.');
+        alert('Image upload failed. You can still place the order and share the image when we contact you.');
     } finally {
         uploadProgress.style.display = 'none';
         progressBar.classList.remove('uploading');
     }
 });
 
-customForm.addEventListener('submit', (e) => {
+customForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const weight = document.getElementById('cakeWeight').value;
-    const flavor = document.getElementById('cakeFlavor').value;
-    const notes = document.getElementById('cakeNotes').value.trim();
+    const submitBtn = customForm.querySelector('button[type="submit"]');
+    const weight    = document.getElementById('cakeWeight').value;
+    const flavor    = document.getElementById('cakeFlavor').value;
+    const notes     = document.getElementById('cakeNotes').value.trim();
 
-    let message = `🎂 *Custom Cake Order — Velvet Whisk* 🎂\n\n`;
-    message += `🍰 *Cake Details:*\n`;
-    message += `- Weight: ${weight} Kg\n`;
-    message += `- Flavor: ${flavor}\n`;
-    message += `- Instructions: ${notes || 'None'}\n\n`;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending Request…';
 
-    if (uploadedImageUrl) {
-        message += `📎 *Reference Image:* ${uploadedImageUrl}\n\n`;
-    } else if (fileInput.files.length > 0) {
-        message += `📎 *Note:* I have the reference image ready to share on WhatsApp.\n\n`;
-    } else {
-        message += `📎 *Reference Image:* No image provided.\n\n`;
+    try {
+        if (!supabaseClient) throw new Error('Supabase not initialised. Check supabase-config.js.');
+
+        const { error } = await supabaseClient
+            .from('orders')
+            .insert([{
+                order_type:           'custom',
+                customer_name:        null,   // custom form doesn't ask name — add a field if you want
+                phone:                null,
+                address:              null,
+                cake_weight:          weight,
+                cake_flavor:          flavor,
+                cake_notes:           notes || null,
+                reference_image_url:  uploadedImageUrl || null,
+                status:               'pending'
+            }]);
+
+        if (error) throw error;
+
+        // ✅ Success
+        customForm.reset();
+        fileNameSpan.textContent = 'Click to upload image';
+        fileNameSpan.style.color = '';
+        uploadedImageUrl = '';
+        showSuccessModal('🎂 Custom Cake Request Sent!', 'We received your custom cake details and will reach out shortly to confirm the design, price, and delivery date.');
+
+    } catch (err) {
+        console.error('Custom order submission failed:', err);
+        alert('Sorry, something went wrong. Please try again or call us directly.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Send Request <i class="fas fa-paper-plane"></i>';
     }
+});
 
-    message += `Please let me know the price and availability. Thank you! 🙏`;
+// ============================================================
+// Success Modal helper
+// ============================================================
+function showSuccessModal(title, message) {
+    const modal = document.getElementById('successModal');
+    const titleEl   = document.getElementById('successTitle');
+    const messageEl = document.getElementById('successMessage');
+    if (!modal) return;
+    titleEl.textContent = title;
+    messageEl.innerHTML = message;
+    modal.classList.add('active');
+}
 
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
+document.getElementById('closeSuccessModal')?.addEventListener('click', () => {
+    document.getElementById('successModal')?.classList.remove('active');
+});
 
-    customForm.reset();
-    fileNameSpan.textContent = 'Click to upload image';
-    fileNameSpan.style.color = '';
-    uploadedImageUrl = '';
+document.getElementById('successModal')?.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('successModal')) {
+        document.getElementById('successModal').classList.remove('active');
+    }
+});
+
+// ============================================================
+// View More → WhatsApp enquiry kept as-is (enquiry, not order)
+// ============================================================
+document.querySelectorAll('.view-more-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const label = e.currentTarget.dataset.label || e.currentTarget.dataset.category;
+        const message = `Hi! 👋 I'd like to explore more options from your *${label}* collection at Velvet Whisk. Could you share more details? 🙏`;
+        const WHATSAPP_NUMBER = '919797979797';
+        const whatsappURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappURL, '_blank');
+    });
+});
+
+// ============================================================
+// Hamburger / Mobile Nav
+// ============================================================
+const hamburgerBtn      = document.getElementById('hamburgerBtn');
+const mobileNav         = document.getElementById('mobileNav');
+const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+const closeMobileNavBtn = document.getElementById('closeMobileNav');
+
+function openMobileNav() {
+    mobileNav.classList.add('active');
+    mobileMenuOverlay.classList.add('active');
+    hamburgerBtn.classList.add('is-active');
+    hamburgerBtn.setAttribute('aria-expanded', 'true');
+    mobileNav.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeMobileNav() {
+    mobileNav.classList.remove('active');
+    mobileMenuOverlay.classList.remove('active');
+    hamburgerBtn.classList.remove('is-active');
+    hamburgerBtn.setAttribute('aria-expanded', 'false');
+    mobileNav.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+}
+
+hamburgerBtn.addEventListener('click', () => {
+    mobileNav.classList.contains('active') ? closeMobileNav() : openMobileNav();
+});
+closeMobileNavBtn.addEventListener('click', closeMobileNav);
+mobileMenuOverlay.addEventListener('click', closeMobileNav);
+document.querySelectorAll('.mobile-nav-link').forEach(link => {
+    link.addEventListener('click', closeMobileNav);
 });
 
 // ============================================================
 // Particle System (Flour Dust Effect)
 // ============================================================
 const canvas = document.getElementById('particleCanvas');
-const ctx = canvas.getContext('2d');
+const ctx    = canvas.getContext('2d');
 let particles = [];
 
 function resizeCanvas() {
-    canvas.width = window.innerWidth;
+    canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
 }
-
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Only run on non-touch devices (saves battery on mobile)
 if (!('ontouchstart' in window)) {
     window.addEventListener('mousemove', (e) => {
-        for (let i = 0; i < 2; i++) {
-            particles.push(new Particle(e.clientX, e.clientY));
-        }
+        for (let i = 0; i < 2; i++) { particles.push(new Particle(e.clientX, e.clientY)); }
     });
 }
 
 class Particle {
     constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.size = Math.random() * 3 + 1;
+        this.x = x; this.y = y;
+        this.size   = Math.random() * 3 + 1;
         this.speedX = Math.random() * 2 - 1;
         this.speedY = Math.random() * 2 - 1;
-        this.color = `rgba(253, 248, 245, ${Math.random() * 0.5 + 0.3})`;
-        this.life = 100;
+        this.color  = `rgba(253, 248, 245, ${Math.random() * 0.5 + 0.3})`;
+        this.life   = 100;
     }
-
-    update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
-        this.life -= 1;
-        this.size *= 0.98;
-    }
-
-    draw() {
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-    }
+    update() { this.x += this.speedX; this.y += this.speedY; this.life -= 1; this.size *= 0.98; }
+    draw() { ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
 }
 
 function animateParticles() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].update();
-        particles[i].draw();
-        if (particles[i].life <= 0 || particles[i].size <= 0.1) {
-            particles.splice(i, 1);
-        }
+        particles[i].update(); particles[i].draw();
+        if (particles[i].life <= 0 || particles[i].size <= 0.1) particles.splice(i, 1);
     }
-
     requestAnimationFrame(animateParticles);
 }
-
 animateParticles();
 
 // ============================================================
@@ -545,13 +541,11 @@ const reveals = document.querySelectorAll('.reveal');
 
 function revealOnScroll() {
     reveals.forEach(el => {
-        const elementTop = el.getBoundingClientRect().top;
-        if (elementTop < window.innerHeight - 100) {
+        if (el.getBoundingClientRect().top < window.innerHeight - 100) {
             el.classList.add('active');
         }
     });
 }
-
 window.addEventListener('scroll', revealOnScroll);
 revealOnScroll();
 
@@ -559,37 +553,30 @@ revealOnScroll();
 // Magnetic Button Effect (desktop only)
 // ============================================================
 function attachMagneticEffect() {
-    if ('ontouchstart' in window) return; // Skip on touch devices
-
+    if ('ontouchstart' in window) return;
     document.querySelectorAll('.btn-magnetic').forEach(btn => {
-        // Remove old listeners by cloning
         const newBtn = btn.cloneNode(true);
         btn.parentNode.replaceChild(newBtn, btn);
-
         newBtn.addEventListener('mousemove', (e) => {
             const rect = newBtn.getBoundingClientRect();
             const x = e.clientX - rect.left - rect.width / 2;
             const y = e.clientY - rect.top - rect.height / 2;
             newBtn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
         });
-
-        newBtn.addEventListener('mouseleave', () => {
-            newBtn.style.transform = 'translate(0, 0)';
-        });
+        newBtn.addEventListener('mouseleave', () => { newBtn.style.transform = 'translate(0, 0)'; });
     });
 }
 
 // ============================================================
-// Init — load everything
+// Init
 // ============================================================
 async function init() {
-    loadCartFromStorage();   // CHANGE 4: restore cart first
-    updateCartUI();          // Show restored cart count immediately
-
-    await loadSiteContent(); // CHANGE 5: update text from CMS
-    await loadAllProducts(); // CHANGE 5: load products from CMS
-
-    attachMagneticEffect();  // After products rendered
+    initSupabase();
+    loadCartFromStorage();
+    updateCartUI();
+    await loadSiteContent();
+    await loadAllProducts();
+    attachMagneticEffect();
 }
 
 init();
