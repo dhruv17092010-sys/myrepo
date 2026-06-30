@@ -263,6 +263,7 @@ function updateCartUI() {
 checkoutBtn.addEventListener('click', () => {
     if (cart.length === 0) return;
     closeCartPanel();
+    updateCheckoutProductsSummary();
     checkoutModal.classList.add('active');
 });
 
@@ -274,6 +275,36 @@ checkoutModal.addEventListener('click', (e) => {
     if (e.target === checkoutModal) checkoutModal.classList.remove('active');
 });
 
+// Function to display products summary in checkout modal
+function updateCheckoutProductsSummary() {
+    const summaryContainer = document.getElementById('checkoutProductsSummary');
+    if (!summaryContainer || cart.length === 0) return;
+    
+    let summaryHTML = '<div class="checkout-products-list">';
+    let total = 0;
+    
+    cart.forEach(item => {
+        const itemTotal = item.price * item.qty;
+        total += itemTotal;
+        summaryHTML += `
+            <div class="checkout-product-item">
+                <span class="product-name">${item.name}</span>
+                <span class="product-qty">× ${item.qty}</span>
+                <span class="product-price">₹${itemTotal}</span>
+            </div>
+        `;
+    });
+    
+    summaryHTML += `
+        <div class="checkout-total-row">
+            <strong>Total:</strong>
+            <strong>₹${total}</strong>
+        </div>
+    </div>`;
+    
+    summaryContainer.innerHTML = summaryHTML;
+}
+
 // ============================================================
 // CHECKOUT FORM — Submit to Supabase
 // ============================================================
@@ -281,9 +312,11 @@ checkoutForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const submitBtn = checkoutForm.querySelector('button[type="submit"]');
-    const name    = document.getElementById('custName').value.trim();
-    const phone   = document.getElementById('custPhone').value.trim();
-    const address = document.getElementById('custAddress').value.trim();
+    const name      = document.getElementById('custName').value.trim();
+    const phone     = document.getElementById('custPhone').value.trim();
+    const address   = document.getElementById('custAddress').value.trim();
+    const paymentMethod = document.getElementById('checkoutPayment').value;
+    const whatsappUpdates = document.getElementById('checkoutWhatsappUpdates').checked;
 
     let total = 0;
     const orderItems = cart.map(item => {
@@ -301,13 +334,14 @@ checkoutForm.addEventListener('submit', async (e) => {
         const { error } = await supabaseClient
             .from('orders')
             .insert([{
-                order_type:     'regular',
-                customer_name:  name,
-                phone:          phone,
-                address:        address,
-                items:          orderItems,
-                total:          total,
-                status:         'pending'
+                order_type:         'regular',
+                customer_name:      name,
+                phone:              phone,
+                address:            address,
+                items:              orderItems,
+                total:              total,
+                status:             'pending'
+                // Note: payment_method and whatsapp_updates are NOT sent to backend as requested
             }]);
 
         if (error) throw error;
@@ -328,7 +362,6 @@ checkoutForm.addEventListener('submit', async (e) => {
         submitBtn.innerHTML = 'Place Order <i class="fas fa-check"></i>';
     }
 });
-
 // ============================================================
 // CUSTOM CAKE FORM — Submit to Supabase
 // ============================================================
@@ -379,9 +412,14 @@ customForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const submitBtn = customForm.querySelector('button[type="submit"]');
-    const weight    = document.getElementById('cakeWeight').value;
-    const flavor    = document.getElementById('cakeFlavor').value;
-    const notes     = document.getElementById('cakeNotes').value.trim();
+    const weight      = document.getElementById('cakeWeight').value;
+    const flavor      = document.getElementById('cakeFlavor').value;
+    const cakeType    = document.getElementById('cakeType').value;
+    const phone       = document.getElementById('cakePhone').value.trim();
+    const address     = document.getElementById('cakeAddress').value.trim();
+    const paymentMethod = document.getElementById('cakePayment').value;
+    const whatsappUpdates = document.getElementById('cakeWhatsappUpdates').checked;
+    const notes       = document.getElementById('cakeNotes').value.trim();
 
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending Request…';
@@ -394,13 +432,15 @@ customForm.addEventListener('submit', async (e) => {
             .insert([{
                 order_type:           'custom',
                 customer_name:        null,   // custom form doesn't ask name — add a field if you want
-                phone:                null,
-                address:              null,
+                phone:                phone,
+                address:              address,
                 cake_weight:          weight,
                 cake_flavor:          flavor,
+                cake_type:            cakeType,
                 cake_notes:           notes || null,
                 reference_image_url:  uploadedImageUrl || null,
                 status:               'pending'
+                // Note: payment_method and whatsapp_updates are NOT sent to backend as requested
             }]);
 
         if (error) throw error;
