@@ -110,82 +110,83 @@
     <section id="menu" class="menu-section">
         <h2 class="section-title">Our <span>Signature</span> Bakes</h2>
         
+        <!-- Search & Filter Bar -->
+        <div class="search-filter-bar reveal">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="productSearch" placeholder="Search products..." aria-label="Search products">
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="vegan"><i class="fas fa-leaf"></i> Vegan</button>
+                <button class="filter-btn" data-filter="eggless"><i class="fas fa-egg"></i> Eggless</button>
+            </div>
+            <select id="categoryFilter" class="category-select" aria-label="Filter by category">
+                <option value="all">All Categories</option>
+                <option value="cakes">Cakes & Cupcakes</option>
+                <option value="breads">Breads & Loaves</option>
+                <option value="pastries">Pastries & Sweet Goods</option>
+                <option value="cookies">Biscuits & Cookies</option>
+                <option value="muffins">Muffins, Brownies & Doughnuts</option>
+                <option value="savory">Savory Baked Goods</option>
+                <option value="dried">Dried Bakery Products</option>
+            </select>
+        </div>
+        
         <!-- Cakes & Cupcakes -->
-        <div class="category-section reveal">
+        <div class="category-section reveal" data-category="cakes">
             <h3 class="category-title">Cakes & Cupcakes <i class="fas fa-birthday-cake"></i></h3>
             <div class="menu-grid" id="cakes-grid">
                 <div class="products-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
             </div>
-            <!-- Change 1: View More now links to WhatsApp, no dummy data -->
-            <button class="view-more-btn" data-category="cakes" data-label="Cakes & Cupcakes">
-                Enquire More Cakes <i class="fab fa-whatsapp"></i>
-            </button>
         </div>
 
         <!-- Breads & Loaves -->
-        <div class="category-section reveal">
+        <div class="category-section reveal" data-category="breads">
             <h3 class="category-title">Breads & Loaves <i class="fas fa-bread-slice"></i></h3>
             <div class="menu-grid" id="breads-grid">
                 <div class="products-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
             </div>
-            <button class="view-more-btn" data-category="breads" data-label="Breads & Loaves">
-                Enquire More Breads <i class="fab fa-whatsapp"></i>
-            </button>
         </div>
 
         <!-- Pastries & Sweet Goods -->
-        <div class="category-section reveal">
+        <div class="category-section reveal" data-category="pastries">
             <h3 class="category-title">Pastries & Sweet Goods <i class="fas fa-cookie-bite"></i></h3>
             <div class="menu-grid" id="pastries-grid">
                 <div class="products-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
             </div>
-            <button class="view-more-btn" data-category="pastries" data-label="Pastries & Sweet Goods">
-                Enquire More Pastries <i class="fab fa-whatsapp"></i>
-            </button>
         </div>
 
         <!-- Biscuits & Cookies -->
-        <div class="category-section reveal">
+        <div class="category-section reveal" data-category="cookies">
             <h3 class="category-title">Biscuits & Cookies <i class="fas fa-cookie"></i></h3>
             <div class="menu-grid" id="cookies-grid">
                 <div class="products-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
             </div>
-            <button class="view-more-btn" data-category="cookies" data-label="Biscuits & Cookies">
-                Enquire More Cookies <i class="fab fa-whatsapp"></i>
-            </button>
         </div>
 
         <!-- Muffins, Brownies & Doughnuts -->
-        <div class="category-section reveal">
+        <div class="category-section reveal" data-category="muffins">
             <h3 class="category-title">Muffins, Brownies & Doughnuts <i class="fas fa-mug-hot"></i></h3>
             <div class="menu-grid" id="muffins-grid">
                 <div class="products-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
             </div>
-            <button class="view-more-btn" data-category="muffins" data-label="Muffins, Brownies & Doughnuts">
-                Enquire More <i class="fab fa-whatsapp"></i>
-            </button>
         </div>
 
         <!-- Savory Baked Goods -->
-        <div class="category-section reveal">
+        <div class="category-section reveal" data-category="savory">
             <h3 class="category-title">Savory Baked Goods <i class="fas fa-pizza-slice"></i></h3>
             <div class="menu-grid" id="savory-grid">
                 <div class="products-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
             </div>
-            <button class="view-more-btn" data-category="savory" data-label="Savory Baked Goods">
-                Enquire More <i class="fab fa-whatsapp"></i>
-            </button>
         </div>
 
         <!-- Dried Bakery Products -->
-        <div class="category-section reveal">
+        <div class="category-section reveal" data-category="dried">
             <h3 class="category-title">Dried Bakery Products <i class="fas fa-cookie"></i></h3>
             <div class="menu-grid" id="dried-grid">
                 <div class="products-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
             </div>
-            <button class="view-more-btn" data-category="dried" data-label="Dried Bakery Products">
-                Enquire More <i class="fab fa-whatsapp"></i>
-            </button>
         </div>
     </section>
 

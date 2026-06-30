@@ -159,6 +159,7 @@ function renderProducts() {
     attachAddToCartListeners();
     revealOnScroll();
     attachMagneticEffect();
+    applyFilters(); // Apply filters after rendering products
 }
 
 function attachAddToCartListeners() {
@@ -444,17 +445,95 @@ document.getElementById('successModal')?.addEventListener('click', (e) => {
 });
 
 // ============================================================
-// View More → WhatsApp enquiry kept as-is (enquiry, not order)
+// Search & Filter Functionality
 // ============================================================
-document.querySelectorAll('.view-more-btn').forEach(btn => {
+let currentBadgeFilter = 'all';
+let currentCategoryFilter = 'all';
+let currentSearchQuery = '';
+
+function applyFilters() {
+    const categorySections = document.querySelectorAll('.category-section');
+    
+    categorySections.forEach(section => {
+        const sectionCategory = section.dataset.category;
+        const grid = section.querySelector('.menu-grid');
+        const cards = grid.querySelectorAll('.product-card');
+        let visibleCardsInCategory = 0;
+        
+        // Check if category matches
+        const categoryMatches = currentCategoryFilter === 'all' || currentCategoryFilter === sectionCategory;
+        
+        if (!categoryMatches) {
+            section.classList.add('hidden');
+            return;
+        } else {
+            section.classList.remove('hidden');
+        }
+        
+        cards.forEach(card => {
+            const name = card.querySelector('h3').textContent.toLowerCase();
+            const desc = card.querySelector('p').textContent.toLowerCase();
+            const badges = card.querySelectorAll('.badge');
+            
+            // Check badge filter
+            let badgeMatches = true;
+            if (currentBadgeFilter !== 'all') {
+                badgeMatches = Array.from(badges).some(badge => badge.classList.contains(currentBadgeFilter));
+            }
+            
+            // Check search query
+            const searchMatches = currentSearchQuery === '' || 
+                                  name.includes(currentSearchQuery) || 
+                                  desc.includes(currentSearchQuery);
+            
+            if (badgeMatches && searchMatches) {
+                card.style.display = '';
+                visibleCardsInCategory++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Hide category section if no products match
+        if (visibleCardsInCategory === 0) {
+            section.classList.add('hidden');
+        }
+    });
+}
+
+// Search input handler
+const productSearchInput = document.getElementById('productSearch');
+if (productSearchInput) {
+    productSearchInput.addEventListener('input', (e) => {
+        currentSearchQuery = e.target.value.toLowerCase().trim();
+        applyFilters();
+    });
+}
+
+// Badge filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-        const label = e.currentTarget.dataset.label || e.currentTarget.dataset.category;
-        const message = `Hi! 👋 I'd like to explore more options from your *${label}* collection at Velvet Whisk. Could you share more details? 🙏`;
-        const WHATSAPP_NUMBER = '919797979797';
-        const whatsappURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappURL, '_blank');
+        // Remove active class from all buttons
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        // Add active class to clicked button
+        e.currentTarget.classList.add('active');
+        currentBadgeFilter = e.currentTarget.dataset.filter;
+        applyFilters();
     });
 });
+
+// Category filter dropdown
+const categoryFilterSelect = document.getElementById('categoryFilter');
+if (categoryFilterSelect) {
+    categoryFilterSelect.addEventListener('change', (e) => {
+        currentCategoryFilter = e.target.value;
+        applyFilters();
+    });
+}
+
+// ============================================================
+// View More → WhatsApp enquiry REMOVED (buttons removed from HTML)
+// ============================================================
 
 // ============================================================
 // Hamburger / Mobile Nav
@@ -577,6 +656,7 @@ async function init() {
     await loadSiteContent();
     await loadAllProducts();
     attachMagneticEffect();
+    applyFilters(); // Initialize filters after products are loaded
 }
 
 init();
