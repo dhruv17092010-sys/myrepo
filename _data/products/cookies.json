@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "name": "Chocolate Chip Cookies",
+      "price": 120,
+      "image": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=800&q=80",
+      "desc": "Classic cookies with chunks.",
+      "badges": []
+    },
+    {
+      "name": "Oatmeal Raisin",
+      "price": 100,
+      "image": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=800&q=80",
+      "desc": "Healthy and chewy.",
+      "badges": ["vegan"]
+    },
+    {
+      "name": "Macarons (Box of 6)",
+      "price": 350,
+      "image": "https://images.unsplash.com/photo-1569864358642-9d1684040f43?auto=format&fit=crop&w=800&q=80",
+      "desc": "French delicate cookies.",
+      "badges": ["eggless"]
+    },
+    {
+      "name": "Butter Cookies",
+      "price": 150,
+      "image": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=800&q=80",
+      "desc": "Melt-in-mouth buttery.",
+      "badges": []
+    }
+  ]
+}
