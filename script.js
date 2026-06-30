@@ -5,7 +5,8 @@
 // --- Default Configuration ---
 const IMGBB_API_KEY = "85d2b64330c82ad0a82284b10bacc47c";
 
-// WhatsApp number used by checkout.html (overwritten by site.json if present)
+// WhatsApp contact number from site.json (kept for general "contact us" use,
+// e.g. a chat/contact button — not used for order placement)
 let SITE_WHATSAPP_NUMBER = "919797979797";
 
 // --- Supabase Client ---
