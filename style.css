@@ -1312,3 +1312,56 @@ textarea {
         margin-bottom: 3rem;
     }
 }
+
+/* Checkout Products Summary */
+.checkout-products-list {
+    background: var(--pink-light);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.checkout-product-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(138, 35, 66, 0.1);
+    font-size: 0.9rem;
+}
+
+.checkout-product-item:last-child {
+    border-bottom: none;
+}
+
+.checkout-product-item .product-name {
+    flex: 1;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.checkout-product-item .product-qty {
+    color: var(--text-light);
+    margin: 0 0.5rem;
+}
+
+.checkout-product-item .product-price {
+    color: var(--rose-bold);
+    font-weight: 600;
+}
+
+.checkout-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.75rem;
+    margin-top: 0.5rem;
+    border-top: 2px solid var(--pink-main);
+    font-size: 1rem;
+}
+
+/* Custom form checkbox styling */
+.form-group input[type="checkbox"] {
+    width: auto !important;
+    min-height: auto !important;
+}
