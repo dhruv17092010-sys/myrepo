@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management — Velvet Whisk</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Load credentials from the same config file as the main site -->
+    <script src="../supabase-config.js"></script>
+
+    <style>
+        :root {
+            --pink:       #f7cac9;
+            --pink-dark:  #c9788a;
+            --cream:      #fdf8f5;
+            --brown:      #5c3d2e;
+            --text:       #2d1b0e;
+            --text-light: #7a5c4a;
+            --border:     #eeddd6;
+            --green:      #4caf8a;
+            --orange:     #e8935a;
+            --red:        #e05c5c;
+            --shadow:     0 4px 20px rgba(92,61,46,0.10);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--cream);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Login Screen ───────────────────────────────────── */
+        #loginScreen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #fdf8f5 0%, #f7cac9 100%);
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .login-logo {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-card h1 {
+            font-family: 'Playfair Display', serif;
+            color: var(--brown);
+            font-size: 1.6rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .login-card p {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+            background: var(--cream);
+        }
+
+        .login-card input:focus { border-color: var(--pink-dark); }
+
+        .btn-primary {
+            width: 100%;
+            padding: 0.9rem;
+            background: var(--pink-dark);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn-primary:hover { background: #b86478; transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+        .login-error {
+            color: var(--red);
+            font-size: 0.82rem;
+            margin-top: 0.75rem;
+            display: none;
+        }
+
+        /* ── App Shell ──────────────────────────────────────── */
+        #appShell { display: none; }
+
+        header {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(92,61,46,0.06);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-left span.icon { font-size: 1.6rem; }
+
+        .header-left h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            color: var(--brown);
+        }
+
+        .header-left p {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: -2px;
+        }
+
+        .btn-logout {
+            background: none;
+            border: 1.5px solid var(--border);
+            color: var(--text-light);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-logout:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        /* ── Main Content ───────────────────────────────────── */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* ── Stats Cards ────────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.total   { background: #f7cac9; }
+        .stat-icon.pending { background: #fde9cc; }
+        .stat-icon.custom  { background: #d4edda; }
+        .stat-icon.today   { background: #dce8ff; }
+
+        .stat-info h3 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--brown);
+            line-height: 1;
+        }
+
+        .stat-info p {
+            font-size: 0.78rem;
+            color: var(--text-light);
+            margin-top: 2px;
+        }
+
+        /* ── Filters & Controls ─────────────────────────────── */
+        .controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: white;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 0.3rem;
+        }
+
+        .filter-tab {
+            padding: 0.45rem 1rem;
+            border: none;
+            background: none;
+            border-radius: 7px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .filter-tab.active {
+            background: var(--pink-dark);
+            color: white;
+        }
+
+        .refresh-btn {
+            background: white;
+            border: 1.5px solid var(--border);
+            color: var(--text-light);
+            padding: 0.55rem 1.1rem;
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover { border-color: var(--pink-dark); color: var(--pink-dark); }
+
+        /* ── Orders List ────────────────────────────────────── */
+        #loadingState, #emptyState {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-light);
+        }
+
+        #emptyState i { font-size: 3rem; margin-bottom: 1rem; display: block; opacity: 0.4; }
+
+        .orders-list { display: flex; flex-direction: column; gap: 1rem; }
+
+        .order-card {
+            background: white;
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1.5px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .order-card:hover { border-color: var(--pink); }
+
+        .order-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .order-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .order-id {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            font-family: monospace;
+        }
+
+        .order-type-badge {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.25rem 0.65rem;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .order-type-badge.regular { background: #dce8ff; color: #3a5aa8; }
+        .order-type-badge.custom  { background: #d4edda; color: #2e7d52; }
+
+        .status-badge {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.25rem 0.65rem;
+            border-radius: 20px;
+        }
+
+        .status-badge.pending    { background: #fde9cc; color: #b06d20; }
+        .status-badge.processing { background: #dce8ff; color: #3a5aa8; }
+        .status-badge.delivered  { background: #d4edda; color: #2e7d52; }
+
+        .order-date {
+            font-size: 0.78rem;
+            color: var(--text-light);
+        }
+
+        .order-header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-status {
+            background: none;
+            border: 1.5px solid var(--border);
+            color: var(--text-light);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-status:hover { border-color: var(--green); color: var(--green); }
+
+        .btn-delete {
+            background: none;
+            border: 1.5px solid var(--border);
+            color: var(--text-light);
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        .btn-delete:hover { border-color: var(--red); color: var(--red); background: #fff0f0; }
+
+        .order-body { padding: 1.25rem; }
+
+        .customer-info {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .customer-info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .customer-info-item i {
+            color: var(--pink-dark);
+            width: 14px;
+        }
+
+        /* Regular order items */
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 0.5rem;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.83rem;
+            margin-bottom: 0.5rem;
+            min-width: 360px;
+        }
+
+        .items-table th {
+            text-align: left;
+            color: var(--text-light);
+            font-weight: 500;
+            padding: 0.4rem 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .items-table td {
+            padding: 0.45rem 0.5rem;
+            border-bottom: 1px solid #faf5f2;
+        }
+
+        .items-table tr:last-child td { border-bottom: none; }
+
+        .order-total {
+            text-align: right;
+            font-weight: 700;
+            color: var(--brown);
+            font-size: 0.95rem;
+            padding-top: 0.5rem;
+        }
+
+        /* Custom cake info */
+        .cake-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .cake-detail-item {
+            background: var(--cream);
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+        }
+
+        .cake-detail-item label {
+            font-size: 0.72rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .cake-detail-item span {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--brown);
+        }
+
+        .cake-ref-image {
+            margin-top: 0.75rem;
+        }
+
+        .cake-ref-image a {
+            font-size: 0.82rem;
+            color: var(--pink-dark);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .cake-ref-image a:hover { text-decoration: underline; }
+
+        /* ── Confirm Delete Overlay ─────────────────────────── */
+        #confirmOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(45,27,14,0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        #confirmOverlay.active { display: flex; }
+
+        .confirm-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 360px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(92,61,46,0.2);
+        }
+
+        .confirm-card .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .confirm-card h3 { font-size: 1.1rem; color: var(--brown); margin-bottom: 0.5rem; }
+        .confirm-card p { font-size: 0.85rem; color: var(--text-light); margin-bottom: 1.5rem; }
+
+        .confirm-btns { display: flex; gap: 0.75rem; }
+
+        .btn-cancel-confirm {
+            flex: 1;
+            padding: 0.75rem;
+            background: none;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel-confirm:hover { border-color: var(--text-light); }
+
+        .btn-confirm-delete {
+            flex: 1;
+            padding: 0.75rem;
+            background: var(--red);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-confirm-delete:hover { background: #c84c4c; }
+
+        /* ── Toast ──────────────────────────────────────────── */
+        #toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(120px);
+            background: var(--brown);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 30px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            z-index: 2000;
+            transition: transform 0.35s ease;
+            white-space: nowrap;
+        }
+
+        #toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* ── Responsive ─────────────────────────────────────── */
+        @media (max-width: 600px) {
+            header { padding: 0.9rem 1rem; }
+            .header-left h1 { font-size: 1.05rem; }
+            main   { padding: 1.25rem 1rem; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+            .stat-card { padding: 1rem; gap: 0.75rem; }
+            .stat-icon { width: 40px; height: 40px; font-size: 1.1rem; }
+            .stat-info h3 { font-size: 1.3rem; }
+            .customer-info { gap: 0.75rem; }
+
+            /* Controls: stack filter tabs above a full-width refresh button */
+            .controls-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+            .filter-tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                justify-content: flex-start;
+            }
+            .filter-tab { white-space: nowrap; }
+            .refresh-btn { justify-content: center; width: 100%; }
+
+            /* Order card header: let badges wrap, push action buttons full width */
+            .order-header { padding: 0.85rem 1rem; }
+            .order-header-right { width: 100%; }
+            .btn-status { flex: 1; text-align: center; }
+            .order-body { padding: 1rem; }
+
+            .cake-detail-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+        }
+
+        @media (max-width: 380px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .login-card { padding: 2rem 1.5rem; }
+            .order-meta { gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     LOGIN SCREEN
+═══════════════════════════════════════════════════════════ -->
+<div id="loginScreen">
+    <div class="login-card">
+        <div class="login-logo">🎂</div>
+        <h1>Velvet Whisk</h1>
+        <p>Admin Order Management</p>
+
+        <input type="email"    id="loginEmail"    placeholder="Admin Email" autocomplete="username">
+        <input type="password" id="loginPassword" placeholder="Password"    autocomplete="current-password">
+        <button class="btn-primary" id="loginBtn">
+            <i class="fas fa-lock"></i> Sign In
+        </button>
+        <p class="login-error" id="loginError">Invalid email or password. Try again.</p>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     APP SHELL (shown after login)
+═══════════════════════════════════════════════════════════ -->
+<div id="appShell">
+
+    <header>
+        <div class="header-left">
+            <span class="icon">🎂</span>
+            <div>
+                <h1>Order Management</h1>
+                <p id="adminEmail" style="color:var(--text-light); font-size:0.72rem;"></p>
+            </div>
+        </div>
+        <button class="btn-logout" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </header>
+
+    <main>
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon total">📦</div>
+                <div class="stat-info">
+                    <h3 id="statTotal">—</h3>
+                    <p>Total Orders</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon pending">⏳</div>
+                <div class="stat-info">
+                    <h3 id="statPending">—</h3>
+                    <p>Pending</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon custom">🎂</div>
+                <div class="stat-info">
+                    <h3 id="statCustom">—</h3>
+                    <p>Custom Cakes</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon today">📅</div>
+                <div class="stat-info">
+                    <h3 id="statToday">—</h3>
+                    <p>Today</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-row">
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="all">All Orders</button>
+                <button class="filter-tab" data-filter="pending">Pending</button>
+                <button class="filter-tab" data-filter="custom">Custom Cakes</button>
+                <button class="filter-tab" data-filter="delivered">Delivered</button>
+            </div>
+            <button class="refresh-btn" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+
+        <!-- Orders -->
+        <div id="loadingState"><i class="fas fa-spinner fa-spin" style="font-size:2rem; color:var(--pink-dark);"></i><br><br>Loading orders…</div>
+        <div id="emptyState" style="display:none;">
+            <i class="fas fa-inbox"></i>
+            <p style="font-size:1rem; font-weight:600; margin-bottom:0.5rem;">No orders here yet</p>
+            <p style="font-size:0.85rem;">When customers place orders, they'll appear here.</p>
+        </div>
+        <div class="orders-list" id="ordersList"></div>
+    </main>
+</div>
+
+<!-- Delete Confirmation -->
+<div id="confirmOverlay">
+    <div class="confirm-card">
+        <div class="icon">🗑️</div>
+        <h3>Delete this order?</h3>
+        <p>This action cannot be undone. The order record will be permanently removed.</p>
+        <div class="confirm-btns">
+            <button class="btn-cancel-confirm" id="cancelDeleteBtn">Cancel</button>
+            <button class="btn-confirm-delete" id="confirmDeleteBtn">Yes, Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast"></div>
+
+
+<script>
+// ============================================================
+// Admin Panel — Velvet Whisk
+// ============================================================
+
+// supabase-config.js loaded above provides SUPABASE_URL and SUPABASE_ANON_KEY
+let sb = null;
+
+try {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch(e) {
+    alert('Could not connect to Supabase. Please check supabase-config.js');
+}
+
+// ── State ────────────────────────────────────────────────────
+let allOrders      = [];
+let currentFilter  = 'all';
+let pendingDeleteId = null;
+
+// ── Helpers ──────────────────────────────────────────────────
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function formatDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true
+    });
+}
+
+function isToday(iso) {
+    if (!iso) return false;
+    const d = new Date(iso);
+    const today = new Date();
+    return d.toDateString() === today.toDateString();
+}
+
+// ── Auth ─────────────────────────────────────────────────────
+document.getElementById('loginBtn').addEventListener('click', handleLogin);
+document.getElementById('loginPassword').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleLogin();
+});
+
+async function handleLogin() {
+    const email    = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const btn      = document.getElementById('loginBtn');
+    const errEl    = document.getElementById('loginError');
+
+    if (!email || !password) {
+        errEl.textContent = 'Please enter both email and password.';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
+    errEl.style.display = 'none';
+
+    try {
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        onLoggedIn(data.user);
+    } catch (err) {
+        errEl.textContent = 'Invalid email or password. Try again.';
+        errEl.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-lock"></i> Sign In';
+    }
+}
+
+function onLoggedIn(user) {
+    document.getElementById('loginScreen').style.display  = 'none';
+    document.getElementById('appShell').style.display     = 'block';
+    document.getElementById('adminEmail').textContent     = user.email;
+    loadOrders();
+}
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await sb.auth.signOut();
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('appShell').style.display    = 'none';
+    allOrders = [];
+});
+
+// Check for an existing session on page load
+(async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) { onLoggedIn(session.user); }
+})();
+
+// ── Load Orders ──────────────────────────────────────────────
+async function loadOrders() {
+    document.getElementById('loadingState').style.display = 'block';
+    document.getElementById('emptyState').style.display   = 'none';
+    document.getElementById('ordersList').innerHTML        = '';
+
+    try {
+        const { data, error } = await sb
+            .from('orders')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        allOrders = data || [];
+        updateStats();
+        renderOrders();
+    } catch (err) {
+        console.error(err);
+        document.getElementById('loadingState').innerHTML =
+            `<i class="fas fa-exclamation-triangle" style="color:var(--red); font-size:2rem;"></i><br><br>Failed to load orders. Check your Supabase setup.`;
+    }
+}
+
+// ── Stats ────────────────────────────────────────────────────
+function updateStats() {
+    document.getElementById('statTotal').textContent   = allOrders.length;
+    document.getElementById('statPending').textContent = allOrders.filter(o => o.status === 'pending').length;
+    document.getElementById('statCustom').textContent  = allOrders.filter(o => o.order_type === 'custom').length;
+    document.getElementById('statToday').textContent   = allOrders.filter(o => isToday(o.created_at)).length;
+}
+
+// ── Render Orders ────────────────────────────────────────────
+function renderOrders() {
+    document.getElementById('loadingState').style.display = 'none';
+    const list = document.getElementById('ordersList');
+    list.innerHTML = '';
+
+    let filtered = allOrders;
+    if (currentFilter === 'pending')   filtered = allOrders.filter(o => o.status === 'pending');
+    if (currentFilter === 'custom')    filtered = allOrders.filter(o => o.order_type === 'custom');
+    if (currentFilter === 'delivered') filtered = allOrders.filter(o => o.status === 'delivered');
+
+    if (filtered.length === 0) {
+        document.getElementById('emptyState').style.display = 'block';
+        return;
+    }
+
+    document.getElementById('emptyState').style.display = 'none';
+    filtered.forEach(order => list.appendChild(buildOrderCard(order)));
+}
+
+function buildOrderCard(order) {
+    const card = document.createElement('div');
+    card.className = 'order-card';
+    card.dataset.id = order.id;
+
+    const statusOptions = ['pending', 'processing', 'delivered'];
+    const nextStatus    = statusOptions[(statusOptions.indexOf(order.status) + 1) % statusOptions.length];
+    const shortId       = order.id.slice(0, 8).toUpperCase();
+
+    // Build body content
+    let bodyHTML = '';
+
+    if (order.order_type === 'regular') {
+        // Customer info
+        bodyHTML += `<div class="customer-info">
+            ${order.customer_name ? `<div class="customer-info-item"><i class="fas fa-user"></i> ${escHtml(order.customer_name)}</div>` : ''}
+            ${order.phone ? `<div class="customer-info-item"><i class="fas fa-phone"></i> ${escHtml(order.phone)}</div>` : ''}
+            ${order.address ? `<div class="customer-info-item"><i class="fas fa-map-marker-alt"></i> ${escHtml(order.address)}</div>` : ''}
+        </div>`;
+
+        // Items table
+        const items = Array.isArray(order.items) ? order.items : [];
+        if (items.length > 0) {
+            bodyHTML += `<div class="table-scroll"><table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th style="text-align:right">Price</th>
+                        <th style="text-align:right">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${items.map(item => `<tr>
+                        <td>${escHtml(item.name)}</td>
+                        <td>${item.qty}</td>
+                        <td style="text-align:right">₹${item.price}</td>
+                        <td style="text-align:right">₹${item.subtotal}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table></div>
+            <div class="order-total">Total: ₹${order.total}</div>`;
+        }
+
+    } else {
+        // Custom cake
+        bodyHTML += `<div class="customer-info">
+            ${order.customer_name ? `<div class="customer-info-item"><i class="fas fa-user"></i> ${escHtml(order.customer_name)}</div>` : ''}
+            ${order.phone ? `<div class="customer-info-item"><i class="fas fa-phone"></i> ${escHtml(order.phone)}</div>` : ''}
+            ${order.address ? `<div class="customer-info-item"><i class="fas fa-map-marker-alt"></i> ${escHtml(order.address)}</div>` : ''}
+        </div>`;
+
+        bodyHTML += `<div class="cake-detail-grid">
+            ${order.cake_weight  ? `<div class="cake-detail-item"><label>Weight</label><span>${escHtml(order.cake_weight)} Kg</span></div>` : ''}
+            ${order.cake_flavor  ? `<div class="cake-detail-item"><label>Flavor</label><span>${escHtml(order.cake_flavor)}</span></div>` : ''}
+            ${order.cake_type    ? `<div class="cake-detail-item"><label>Type</label><span>${escHtml(order.cake_type)}</span></div>` : ''}
+            ${order.cake_notes   ? `<div class="cake-detail-item" style="grid-column: 1 / -1;"><label>Special Instructions</label><span style="font-weight:400; font-size:0.85rem;">${escHtml(order.cake_notes)}</span></div>` : ''}
+        </div>`;
+
+        if (order.reference_image_url) {
+            bodyHTML += `<div class="cake-ref-image">
+                <a href="${escHtml(order.reference_image_url)}" target="_blank" rel="noopener">
+                    <i class="fas fa-image"></i> View Reference Image
+                </a>
+            </div>`;
+        }
+    }
+
+    card.innerHTML = `
+        <div class="order-header">
+            <div class="order-meta">
+                <span class="order-id">#${shortId}</span>
+                <span class="order-type-badge ${order.order_type}">${order.order_type === 'custom' ? '🎂 Custom Cake' : '🛒 Regular Order'}</span>
+                <span class="status-badge ${order.status}">${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span>
+                <span class="order-date"><i class="fas fa-clock" style="margin-right:3px;"></i>${formatDate(order.created_at)}</span>
+            </div>
+            <div class="order-header-right">
+                <button class="btn-status" data-id="${order.id}" data-next="${nextStatus}" title="Mark as ${nextStatus}">
+                    Mark as ${nextStatus.charAt(0).toUpperCase() + nextStatus.slice(1)}
+                </button>
+                <button class="btn-delete" data-id="${order.id}" title="Delete order">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div class="order-body">${bodyHTML}</div>
+    `;
+
+    // Listeners
+    card.querySelector('.btn-delete').addEventListener('click', () => openDeleteConfirm(order.id));
+    card.querySelector('.btn-status').addEventListener('click', (e) => {
+        const { id, next } = e.currentTarget.dataset;
+        updateOrderStatus(id, next);
+    });
+
+    return card;
+}
+
+function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+// ── Update Status ─────────────────────────────────────────────
+async function updateOrderStatus(id, newStatus) {
+    try {
+        const { error } = await sb.from('orders').update({ status: newStatus }).eq('id', id);
+        if (error) throw error;
+
+        const idx = allOrders.findIndex(o => o.id === id);
+        if (idx !== -1) allOrders[idx].status = newStatus;
+
+        updateStats();
+        renderOrders();
+        showToast(`✅ Order marked as ${newStatus}`);
+    } catch (err) {
+        console.error(err);
+        showToast('❌ Could not update status');
+    }
+}
+
+// ── Delete ────────────────────────────────────────────────────
+function openDeleteConfirm(id) {
+    pendingDeleteId = id;
+    document.getElementById('confirmOverlay').classList.add('active');
+}
+
+document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+    pendingDeleteId = null;
+    document.getElementById('confirmOverlay').classList.remove('active');
+});
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+    if (!pendingDeleteId) return;
+    const id = pendingDeleteId;
+    document.getElementById('confirmOverlay').classList.remove('active');
+    pendingDeleteId = null;
+
+    try {
+        const { error } = await sb.from('orders').delete().eq('id', id);
+        if (error) throw error;
+
+        allOrders = allOrders.filter(o => o.id !== id);
+        updateStats();
+        renderOrders();
+        showToast('🗑️ Order deleted successfully');
+    } catch (err) {
+        console.error(err);
+        showToast('❌ Could not delete order');
+    }
+});
+
+// ── Filter Tabs ───────────────────────────────────────────────
+document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentFilter = tab.dataset.filter;
+        renderOrders();
+    });
+});
+
+// ── Refresh ───────────────────────────────────────────────────
+document.getElementById('refreshBtn').addEventListener('click', () => {
+    loadOrders();
+    showToast('🔄 Refreshed');
+});
+
+</script>
+</body>
+</html>
