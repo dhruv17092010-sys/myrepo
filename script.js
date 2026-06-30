@@ -203,9 +203,6 @@ const cartItemsContainer   = document.getElementById('cartItems');
 const cartCountEl          = document.querySelector('.cart-count');
 const cartTotalEl          = document.getElementById('cartTotal');
 const checkoutBtn          = document.getElementById('checkoutBtn');
-const checkoutModal        = document.getElementById('checkoutModal');
-const closeModalBtn        = document.getElementById('closeModal');
-const checkoutForm         = document.getElementById('checkoutForm');
 
 cartBtn.addEventListener('click', () => {
     cartSidebar.classList.add('active');
@@ -263,109 +260,13 @@ function updateCartUI() {
 checkoutBtn.addEventListener('click', () => {
     if (cart.length === 0) return;
     closeCartPanel();
-    updateCheckoutProductsSummary();
-    if (checkoutModal) checkoutModal.classList.add('active');
+    // Redirect to checkout page
+    window.location.href = 'checkout.html';
 });
 
-if (closeModalBtn) {
-    closeModalBtn.addEventListener('click', () => {
-        if (checkoutModal) checkoutModal.classList.remove('active');
-    });
-}
-
-if (checkoutModal) {
-    checkoutModal.addEventListener('click', (e) => {
-        if (e.target === checkoutModal) checkoutModal.classList.remove('active');
-    });
-}
-
-// Function to display products summary in checkout modal
-function updateCheckoutProductsSummary() {
-    const summaryContainer = document.getElementById('checkoutProductsSummary');
-    if (!summaryContainer || cart.length === 0) return;
-    
-    let summaryHTML = '<div class="checkout-products-list">';
-    let total = 0;
-    
-    cart.forEach(item => {
-        const itemTotal = item.price * item.qty;
-        total += itemTotal;
-        summaryHTML += `
-            <div class="checkout-product-item">
-                <span class="product-name">${item.name}</span>
-                <span class="product-qty">× ${item.qty}</span>
-                <span class="product-price">₹${itemTotal}</span>
-            </div>
-        `;
-    });
-    
-    summaryHTML += `
-        <div class="checkout-total-row">
-            <strong>Total:</strong>
-            <strong>₹${total}</strong>
-        </div>
-    </div>`;
-    
-    summaryContainer.innerHTML = summaryHTML;
-}
-
 // ============================================================
-// CHECKOUT FORM — Submit to Supabase
+// CHECKOUT FORM — Submit to Supabase (removed - now on checkout.html)
 // ============================================================
-checkoutForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const submitBtn = checkoutForm.querySelector('button[type="submit"]');
-    const name      = document.getElementById('custName').value.trim();
-    const phone     = document.getElementById('custPhone').value.trim();
-    const address   = document.getElementById('custAddress').value.trim();
-    const paymentMethod = document.getElementById('checkoutPayment').value;
-    const whatsappUpdates = document.getElementById('checkoutWhatsappUpdates').checked;
-
-    let total = 0;
-    const orderItems = cart.map(item => {
-        total += item.price * item.qty;
-        return { name: item.name, qty: item.qty, price: item.price, subtotal: item.price * item.qty };
-    });
-
-    // Show loading state
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Order…';
-
-    try {
-        if (!supabaseClient) throw new Error('Supabase not initialised. Check supabase-config.js.');
-
-        const { error } = await supabaseClient
-            .from('orders')
-            .insert([{
-                order_type:         'regular',
-                customer_name:      name,
-                phone:              phone,
-                address:            address,
-                items:              orderItems,
-                total:              total,
-                status:             'pending'
-                // Note: payment_method and whatsapp_updates are NOT sent to backend as requested
-            }]);
-
-        if (error) throw error;
-
-        // ✅ Success
-        cart = [];
-        saveCartToStorage();
-        updateCartUI();
-        checkoutForm.reset();
-        checkoutModal.classList.remove('active');
-        showSuccessModal('🎉 Order Placed!', `Thank you, ${name}! Your order has been received. We'll contact you at <strong>${phone}</strong> to confirm delivery.`);
-
-    } catch (err) {
-        console.error('Order submission failed:', err);
-        alert('Sorry, something went wrong. Please try again or call us directly.');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'Place Order <i class="fas fa-check"></i>';
-    }
-});
 // ============================================================
 // CUSTOM CAKE FORM — Submit to Supabase
 // ============================================================

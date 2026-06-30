@@ -328,37 +328,6 @@
         </div>
     </div>
 
-    <!-- Checkout Details Modal -->
-    <div class="modal-overlay" id="checkoutModal">
-        <div class="modal-content">
-            <h3>Checkout Details</h3>
-            <form id="checkoutForm">
-                <div class="checkout-products-summary" id="checkoutProductsSummary"></div>
-                <input type="text" id="custName" placeholder="Full Name" required>
-                <input type="tel" id="custPhone" placeholder="Mobile Number" required pattern="[0-9]{10}" title="Please enter a 10-digit mobile number">
-                <textarea id="custAddress" placeholder="Delivery Address" required></textarea>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Payment Method</label>
-                        <select id="checkoutPayment" required disabled>
-                            <option value="COD" selected>Cash on Delivery (COD)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <input type="checkbox" id="checkoutWhatsappUpdates" style="width: 18px; height: 18px;">
-                            Get delivery updates on WhatsApp
-                        </label>
-                    </div>
-                </div>
-                <div class="modal-btns">
-                    <button type="button" class="btn-secondary" id="closeModal">Cancel</button>
-                    <button type="submit" class="btn-magnetic">Place Order <i class="fas fa-check"></i></button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Success Modal (shown after order is placed) -->
     <div class="modal-overlay" id="successModal">
         <div class="modal-content" style="text-align:center; padding: 2.5rem 2rem;">
