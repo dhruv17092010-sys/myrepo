@@ -24,6 +24,7 @@
             <a href="index.html#menu">Menu</a>
             <a href="index.html#custom">Custom Cakes</a>
             <a href="index.html#contact">Contact</a>
+            <a href="track-order.html">Track Order</a>
         </nav>
         <div class="navbar-right">
             <button class="cart-btn" id="openCart" aria-label="Open cart">
@@ -53,6 +54,7 @@
         <a href="index.html#menu" class="mobile-nav-link">Menu</a>
         <a href="index.html#custom" class="mobile-nav-link">Custom Cakes</a>
         <a href="index.html#contact" class="mobile-nav-link">Contact</a>
+        <a href="track-order.html" class="mobile-nav-link">Track Order</a>
     </nav>
 
     <!-- Checkout Section -->
@@ -143,7 +145,8 @@
         <div class="modal-content" style="text-align:center; padding: 2.5rem 2rem;">
             <div style="font-size:3rem; margin-bottom:0.75rem;">✅</div>
             <h3 style="margin-bottom:0.5rem;">Order Placed Successfully!</h3>
-            <p style="color:#666; margin-bottom:1.5rem;">We've received your order and will contact you shortly to confirm delivery.</p>
+            <p style="color:#666; margin-bottom:1.25rem;">We've received your order and will contact you shortly to confirm delivery.</p>
+            <div id="successOrderIdBlock" style="margin-bottom:1.5rem;"></div>
             <button class="btn-magnetic" id="closeSuccessModal">Continue Shopping</button>
         </div>
     </div>
@@ -237,9 +240,12 @@
                     try {
                         if (!supabaseClient) throw new Error('Supabase not initialised. Check supabase-config.js.');
 
+                        const orderId = generateOrderId();
+
                         const { error } = await supabaseClient
                             .from('orders')
                             .insert([{
+                                id: orderId,
                                 order_type: 'regular',
                                 customer_name: customerName,
                                 phone: customerPhone,
@@ -253,12 +259,15 @@
 
                         if (error) throw error;
 
+                        rememberLastOrder(orderId, customerPhone);
+
                         // Clear the cart now that the order has been saved
                         cart = [];
                         saveCartToStorage();
                         updateCartUI();
 
-                        // Show success modal, reset form
+                        // Show success modal with the order ID, reset form
+                        document.getElementById('successOrderIdBlock').innerHTML = buildOrderIdBlock(orderId);
                         document.getElementById('successModal').classList.add('active');
                         checkoutForm.reset();
 

@@ -21,6 +21,35 @@ function initSupabase() {
     }
 }
 
+// --- Order ID generation ---
+// We generate the order's UUID in the browser (instead of letting the
+// database assign one) so we can show it to the customer immediately
+// after checkout — they need this ID + their phone number to look up
+// their order later on track-order.html. Anon visitors can INSERT
+// orders but cannot SELECT them back, so reading the id from the
+// database response isn't an option here.
+function generateOrderId() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return window.crypto.randomUUID();
+    }
+    // Fallback UUID v4 generator for older browsers
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
+}
+
+// Save the customer's most recent order locally so track-order.html
+// can pre-fill the lookup form for them. This is just a convenience —
+// it does NOT grant access by itself; the tracking page still has to
+// pass both the order id and phone to the server to fetch real data.
+function rememberLastOrder(orderId, phone) {
+    try {
+        localStorage.setItem('velvetwhisk_last_order', JSON.stringify({ id: orderId, phone: phone }));
+    } catch (e) { /* ignore storage errors */ }
+}
+
 // --- Products (populated from _data/products/*.json via CMS) ---
 const products = {
     cakes: [], breads: [], pastries: [], cookies: [],
@@ -90,6 +119,8 @@ async function loadSiteContent() {
         }
         if (data.whatsapp_number) {
             SITE_WHATSAPP_NUMBER = data.whatsapp_number;
+            // Persist so pages without script.js (e.g. track-order.html) can use the correct number
+            try { localStorage.setItem('velvetwhisk_whatsapp_number', data.whatsapp_number); } catch (e) { /* ignore */ }
         }
     } catch (err) {
         console.log('site.json not found, using HTML defaults.');
@@ -347,9 +378,12 @@ if (customForm && fileInput) {
         try {
             if (!supabaseClient) throw new Error('Supabase not initialised. Check supabase-config.js.');
 
+            const orderId = generateOrderId();
+
             const { error } = await supabaseClient
                 .from('orders')
                 .insert([{
+                    id:                    orderId,
                     order_type:           'custom',
                     customer_name:        name || null,
                     phone:                phone,
@@ -365,12 +399,18 @@ if (customForm && fileInput) {
 
             if (error) throw error;
 
+            rememberLastOrder(orderId, phone);
+
             // ✅ Success
             customForm.reset();
             fileNameSpan.textContent = 'Click to upload image';
             fileNameSpan.style.color = '';
             uploadedImageUrl = '';
-            showSuccessModal('🎂 Custom Cake Request Sent!', 'We received your custom cake details and will reach out shortly to confirm the design, price, and delivery date.');
+            showSuccessModal(
+                '🎂 Custom Cake Request Sent!',
+                `We received your custom cake details and will reach out shortly to confirm the design, price, and delivery date.<br><br>
+                ${buildOrderIdBlock(orderId)}`
+            );
 
         } catch (err) {
             console.error('Custom order submission failed:', err);
@@ -385,6 +425,33 @@ if (customForm && fileInput) {
 // ============================================================
 // Success Modal helper
 // ============================================================
+function buildOrderIdBlock(orderId) {
+    return `
+        <div style="background:#fdf3f0; border:1.5px dashed var(--pink-dark,#c9788a); border-radius:10px; padding:0.9rem 1rem; text-align:left;">
+            <div style="font-size:0.78rem; color:#7a5c4a; margin-bottom:0.3rem;">Your Order ID — save this to track your order:</div>
+            <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                <code id="orderIdText" style="font-size:0.85rem; word-break:break-all; font-weight:600;">${orderId}</code>
+                <button type="button" onclick="copyOrderId('${orderId}', this)" style="border:none; background:var(--pink-dark,#c9788a); color:#fff; border-radius:6px; padding:0.3rem 0.6rem; font-size:0.75rem; cursor:pointer;">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+            <div style="font-size:0.78rem; color:#7a5c4a; margin-top:0.5rem;">
+                Use this ID with your phone number on the <a href="track-order.html" style="color:var(--pink-dark,#c9788a); font-weight:600;">Track Order</a> page anytime.
+            </div>
+        </div>
+    `;
+}
+
+function copyOrderId(orderId, btn) {
+    navigator.clipboard?.writeText(orderId).then(() => {
+        if (btn) {
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied';
+            setTimeout(() => { btn.innerHTML = original; }, 1500);
+        }
+    }).catch(() => {});
+}
+
 function showSuccessModal(title, message) {
     const modal = document.getElementById('successModal');
     const titleEl   = document.getElementById('successTitle');
