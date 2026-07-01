@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Velvet Whisk</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="checkout-page">
+
+    <!-- Navigation -->
+    <header class="navbar">
+        <div class="logo">
+            <div class="logo-placeholder">
+                <i class="fas fa-birthday-cake"></i>
+                <span id="site-logo-name">Velvet Whisk</span>
+            </div>
+        </div>
+        <nav class="nav-links" id="desktopNav">
+            <a href="index.html#home">Home</a>
+            <a href="index.html#menu">Menu</a>
+            <a href="index.html#custom">Custom Cakes</a>
+            <a href="index.html#contact">Contact</a>
+            <a href="track-order.html">Track Order</a>
+        </nav>
+        <div class="navbar-right">
+            <button class="cart-btn" id="openCart" aria-label="Open cart">
+                <i class="fas fa-shopping-bag"></i>
+                <span class="cart-count">0</span>
+            </button>
+            <button class="hamburger" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
+    <!-- Mobile Slide-in Nav -->
+    <nav class="mobile-nav" id="mobileNav" aria-hidden="true">
+        <div class="mobile-nav-header">
+            <span class="mobile-logo"><i class="fas fa-birthday-cake"></i> Velvet Whisk</span>
+            <button class="close-mobile-nav" id="closeMobileNav" aria-label="Close menu">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <a href="index.html#home" class="mobile-nav-link">Home</a>
+        <a href="index.html#menu" class="mobile-nav-link">Menu</a>
+        <a href="index.html#custom" class="mobile-nav-link">Custom Cakes</a>
+        <a href="index.html#contact" class="mobile-nav-link">Contact</a>
+        <a href="track-order.html" class="mobile-nav-link">Track Order</a>
+    </nav>
+
+    <!-- Checkout Section -->
+    <section class="checkout-section">
+        <div class="checkout-container">
+            <div class="checkout-header">
+                <h1><i class="fas fa-shopping-bag"></i> Checkout</h1>
+                <p>Complete your order details below</p>
+            </div>
+
+            <div class="checkout-content">
+                <!-- Products Summary -->
+                <div class="checkout-products-card">
+                    <h3><i class="fas fa-list"></i> Order Summary</h3>
+                    <div class="checkout-products-list" id="checkoutProductsList">
+                        <!-- Products will be dynamically inserted here -->
+                    </div>
+                    <div class="checkout-total-row">
+                        <span>Total Amount:</span>
+                        <span id="checkoutTotal">₹0</span>
+                    </div>
+                </div>
+
+                <!-- Checkout Form -->
+                <div class="checkout-form-card">
+                    <h3><i class="fas fa-user"></i> Delivery Details</h3>
+                    <form id="checkoutForm" class="checkout-form">
+                        <div class="form-group">
+                            <label for="custName">Full Name <span class="required">*</span></label>
+                            <input type="text" id="custName" placeholder="Enter your full name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="custPhone">Mobile Number <span class="required">*</span></label>
+                            <input type="tel" id="custPhone" placeholder="Enter 10-digit mobile number" required pattern="[0-9]{10}" title="Please enter a 10-digit mobile number">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="custAddress">Delivery Address <span class="required">*</span></label>
+                            <textarea id="custAddress" placeholder="Enter complete delivery address with landmark" required></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Payment Method <span class="required">*</span></label>
+                                <select id="checkoutPayment" required disabled>
+                                    <option value="COD" selected>Cash on Delivery (COD)</option>
+                                </select>
+                                <small class="form-hint">Payment method is for display only</small>
+                            </div>
+                        </div>
+
+                        <div class="checkout-actions">
+                            <button type="button" class="btn-secondary btn-back" onclick="window.location.href='index.html#menu'">
+                                <i class="fas fa-arrow-left"></i> Back to Menu
+                            </button>
+                            <button type="submit" class="btn-magnetic btn-place-order">
+                                <i class="fas fa-check-circle"></i> Place Order
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide-out Cart -->
+    <div class="cart-overlay" id="cartOverlay"></div>
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>Your Bag</h3>
+            <button class="close-cart" id="closeCart"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <p class="empty-cart">Your bag is empty.</p>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cartTotal">₹0</span>
+            </div>
+            <button class="btn-magnetic btn-full" id="checkoutFromCartBtn">Proceed to Checkout <i class="fas fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-content" style="text-align:center; padding: 2.5rem 2rem;">
+            <div style="font-size:3rem; margin-bottom:0.75rem;">✅</div>
+            <h3 style="margin-bottom:0.5rem;">Order Placed Successfully!</h3>
+            <p style="color:#666; margin-bottom:1.25rem;">We've received your order and will contact you shortly to confirm delivery.</p>
+            <div id="successOrderIdBlock" style="margin-bottom:1.5rem;"></div>
+            <button class="btn-magnetic" id="closeSuccessModal">Continue Shopping</button>
+        </div>
+    </div>
+
+    <!-- Supabase JS SDK (must load before supabase-config.js / script.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // ============================================================
+        // Checkout page specific logic.
+        // NOTE: `cart`, `saveCartToStorage()`, `updateCartUI()`, `closeCartPanel()`,
+        // and `supabaseClient` all come from script.js (loaded above) — this page
+        // shares the SAME cart as the rest of the site, it does not keep its own copy.
+        // ============================================================
+
+        // Re-render the order summary whenever the shared cart UI updates
+        // (e.g. when an item is removed from the slide-out bag on this page).
+        const _baseUpdateCartUI = updateCartUI;
+        updateCartUI = function () {
+            _baseUpdateCartUI();
+            updateCheckoutProductsList();
+        };
+
+        // Render the "Order Summary" card on the checkout page
+        function updateCheckoutProductsList() {
+            const container = document.getElementById('checkoutProductsList');
+            const totalEl = document.getElementById('checkoutTotal');
+            if (!container) return;
+
+            if (cart.length === 0) {
+                container.innerHTML = '<p class="empty-cart">Your bag is empty. <a href="index.html#menu">Browse our menu</a></p>';
+                if (totalEl) totalEl.textContent = '₹0';
+                return;
+            }
+
+            let html = '';
+            cart.forEach(item => {
+                html += `
+                    <div class="checkout-product-item">
+                        <div class="product-info">
+                            <div class="product-name">${item.name}</div>
+                            <div class="product-meta">Qty: ${item.qty} × ₹${item.price}</div>
+                        </div>
+                        <div class="product-price">₹${item.price * item.qty}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            if (totalEl) totalEl.textContent = '₹' + calculateTotal();
+        }
+
+        function calculateTotal() {
+            return cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // cart is already loaded from localStorage by script.js's init();
+            // just render the order summary with it.
+            updateCheckoutProductsList();
+
+            // Handle checkout form submission
+            const checkoutForm = document.getElementById('checkoutForm');
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    if (cart.length === 0) {
+                        alert('Your bag is empty. Please add items before checking out.');
+                        return;
+                    }
+
+                    const submitBtn = checkoutForm.querySelector('button[type="submit"]');
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+                    // Get form values
+                    const customerName = document.getElementById('custName').value.trim();
+                    const customerPhone = document.getElementById('custPhone').value.trim();
+                    const customerAddress = document.getElementById('custAddress').value.trim();
+                    const paymentMethod = document.getElementById('checkoutPayment').value;
+
+                    const orderItems = cart.map(item => ({
+                        name: item.name,
+                        qty: item.qty,
+                        price: item.price,
+                        subtotal: item.price * item.qty
+                    }));
+                    const orderTotal = calculateTotal();
+
+                    try {
+                        if (!supabaseClient) throw new Error('Supabase not initialised. Check supabase-config.js.');
+
+                        const orderId = generateOrderId();
+
+                        const { error } = await supabaseClient
+                            .from('orders')
+                            .insert([{
+                                id: orderId,
+                                order_type: 'regular',
+                                customer_name: customerName,
+                                phone: customerPhone,
+                                address: customerAddress,
+                                items: orderItems,
+                                total: orderTotal,
+                                status: 'pending'
+                                // Note: payment_method is not stored in the database —
+                                // add a matching column in supabase.sql if you need it.
+                            }]);
+
+                        if (error) throw error;
+
+                        rememberLastOrder(orderId, customerPhone);
+
+                        // Clear the cart now that the order has been saved
+                        cart = [];
+                        saveCartToStorage();
+                        updateCartUI();
+
+                        // Show success modal with the order ID, reset form
+                        document.getElementById('successOrderIdBlock').innerHTML = buildOrderIdBlock(orderId);
+                        document.getElementById('successModal').classList.add('active');
+                        checkoutForm.reset();
+
+                    } catch (err) {
+                        console.error('Checkout submission failed:', err);
+                        alert('Sorry, something went wrong while placing your order. Please try again or contact us directly.');
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Place Order';
+                    }
+                });
+            }
+
+            // Close success modal
+            const closeSuccessModal = document.getElementById('closeSuccessModal');
+            if (closeSuccessModal) {
+                closeSuccessModal.addEventListener('click', () => {
+                    document.getElementById('successModal').classList.remove('active');
+                    window.location.href = 'index.html#menu';
+                });
+            }
+
+            // Handle "Proceed to Checkout" button inside the slide-out bag
+            const checkoutFromCartBtn = document.getElementById('checkoutFromCartBtn');
+            if (checkoutFromCartBtn) {
+                checkoutFromCartBtn.addEventListener('click', () => {
+                    if (cart.length === 0) return;
+                    closeCartPanel();
+                    // Already on checkout page, just scroll to the form
+                    document.querySelector('.checkout-form-card').scrollIntoView({ behavior: 'smooth' });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
