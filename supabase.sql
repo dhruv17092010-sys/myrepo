@@ -1,5 +1,5 @@
 -- ============================================================
--- IMPORTANT — if you already created this table in Supabase before,
+-- IMPORTANT — if you already created this table before,
 -- DO NOT run the DROP TABLE / CREATE TABLE below (it will delete your
 -- existing orders). Instead just run this one line in the SQL Editor:
 --
@@ -26,30 +26,43 @@ CREATE TABLE orders (
   cake_type           TEXT,
   cake_notes          TEXT,
   reference_image_url TEXT,
-  status              TEXT        DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'delivered'))
+  status              TEXT        DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'delivered')),
+  user_id             UUID        REFERENCES auth.users(id)
 );
+
+-- Create index on user_id for faster queries
+CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
+
 -- Turn on Row Level Security (RLS) for the orders table
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
 -- Rule 1: Anyone (customers) can INSERT (place an order)
 CREATE POLICY "Anyone can place an order"
  ON orders
  FOR INSERT
  TO anon
  WITH CHECK (true);
--- Rule 2: Only logged-in admins can SELECT (view) orders
-CREATE POLICY "Admin can view orders"
+
+-- Rule 2: Authenticated users can view their own orders
+CREATE POLICY "Users can view their own orders"
  ON orders
  FOR SELECT
  TO authenticated
- USING (true);
--- Rule 3: Only logged-in admins can UPDATE order status
+ USING (auth.uid() = user_id OR user_id IS NULL);
+
+-- Rule 3: Only logged-in admins can view ALL orders (for admin-orders page)
+-- Note: This requires users with admin role to be identified separately
+-- For now, admins use the same policy as regular users but access via admin-orders page
+
+-- Rule 4: Admins can update any order status (via admin-orders page)
 CREATE POLICY "Admin can update orders"
  ON orders
  FOR UPDATE
  TO authenticated
  USING (true)
  WITH CHECK (true);
--- Rule 4: Only logged-in admins can DELETE orders
+
+-- Rule 5: Admins can delete orders (via admin-orders page)
 CREATE POLICY "Admin can delete orders"
  ON orders
  FOR DELETE
