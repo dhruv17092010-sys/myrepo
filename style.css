@@ -111,6 +111,27 @@ h1, h2, h3 {
     width: 100%;
 }
 
+/* Account link styling */
+.nav-links .account-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--pink-main);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: var(--transition);
+}
+
+.nav-links .account-link:hover {
+    background: var(--pink-dark);
+    transform: translateY(-2px);
+}
+
+.nav-links .account-link::after {
+    display: none;
+}
+
 /* Navbar right group (cart + hamburger) */
 .navbar-right {
     display: flex;
