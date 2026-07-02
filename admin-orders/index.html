@@ -907,6 +907,20 @@
             </div>
         </div>
 
+        <!-- Revenue by Product Stats -->
+        <div class="product-stats" style="margin-top:1rem;">
+            <div class="product-stat-card most-sold" style="border-left-color:#c9788a;">
+                <h4><i class="fas fa-coins"></i> Highest Revenue Product</h4>
+                <div class="product-name" id="highestRevenueProduct">—</div>
+                <div class="product-qty" id="highestRevenueAmount">₹0</div>
+            </div>
+            <div class="product-stat-card least-sold" style="border-left-color:#e05c5c;">
+                <h4><i class="fas fa-coins"></i> Lowest Revenue Product</h4>
+                <div class="product-name" id="lowestRevenueProduct">—</div>
+                <div class="product-qty" id="lowestRevenueAmount">₹0</div>
+            </div>
+        </div>
+
         <!-- Charts Section -->
         <div class="charts-section">
             <div class="chart-card">
@@ -919,6 +933,22 @@
                 <h3><i class="fas fa-chart-pie"></i> Order Distribution</h3>
                 <div class="chart-container">
                     <canvas id="orderPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Revenue Charts Section -->
+        <div class="charts-section" style="margin-top:1rem;">
+            <div class="chart-card">
+                <h3><i class="fas fa-chart-bar"></i> Revenue by Product (Top 5)</h3>
+                <div class="chart-container">
+                    <canvas id="productRevenueBarChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3><i class="fas fa-chart-pie"></i> Revenue Share by Product</h3>
+                <div class="chart-container">
+                    <canvas id="productRevenuePieChart"></canvas>
                 </div>
             </div>
         </div>
@@ -987,6 +1017,8 @@ let currentTimePeriod = 'day'; // day, month, year
 // Chart instances
 let revenueChartInstance = null;
 let orderPieChartInstance = null;
+let productRevenueBarChartInstance = null;
+let productRevenuePieChartInstance = null;
 
 // ── Helpers ──────────────────────────────────────────────────
 function showToast(msg) {
@@ -1015,6 +1047,8 @@ function isToday(iso) {
 function isThisMonth(iso) {
     if (!iso) return false;
     const d = new Date(iso);
+
+// Chart instances
     const now = new Date();
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
 }
@@ -1125,6 +1159,15 @@ async function loadOrders() {
     }
 }
 
+
+// Get order total including custom cake calculation (₹800/kg)
+function getOrderTotal(order) {
+    if (order.order_type === 'custom') {
+        const weight = parseFloat(order.cake_weight) || 0;
+        return weight * 800;
+    }
+    return order.total || 0;
+}
 // ── Stats ────────────────────────────────────────────────────
 function updateStats() {
     document.getElementById('statTotal').textContent   = allOrders.length;
@@ -1147,9 +1190,9 @@ function updateRevenueStats() {
     const monthOrders = allOrders.filter(o => isThisMonth(o.created_at));
     const yearOrders = allOrders.filter(o => isThisYear(o.created_at));
     
-    const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-    const monthRevenue = monthOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-    const yearRevenue = yearOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const todayRevenue = todayOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
+    const monthRevenue = monthOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
+    const yearRevenue = yearOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
     
     document.getElementById('revenueToday').textContent = formatCurrency(todayRevenue);
     document.getElementById('revenueMonth').textContent = formatCurrency(monthRevenue);
@@ -1224,7 +1267,7 @@ function updateRevenueChart() {
             const hour = new Date(o.created_at).getHours();
             const idx = Math.floor(hour / 4);
             if (idx >= 0 && idx < 6) {
-                data[idx] += order.total || 0;
+                data[idx] += getOrderTotal(order);
             }
         });
     } else if (period === 'month') {
@@ -1236,7 +1279,7 @@ function updateRevenueChart() {
         monthOrders.forEach(order => {
             const day = new Date(o.created_at).getDate();
             const weekIdx = Math.min(Math.floor((day - 1) / 7), 3);
-            data[weekIdx] += order.total || 0;
+            data[weekIdx] += getOrderTotal(order);
         });
     } else {
         // Monthly revenue for this year
@@ -1246,7 +1289,7 @@ function updateRevenueChart() {
         const yearOrders = allOrders.filter(o => isThisYear(o.created_at));
         yearOrders.forEach(order => {
             const month = new Date(o.created_at).getMonth();
-            data[month] += order.total || 0;
+            data[month] += getOrderTotal(order);
         });
     }
     
@@ -1550,9 +1593,9 @@ function downloadReport(period) {
     const monthOrders = allOrders.filter(o => isThisMonth(o.created_at));
     const yearOrders = allOrders.filter(o => isThisYear(o.created_at));
     
-    const todayRevenue = todayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-    const monthRevenue = monthOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-    const yearRevenue = yearOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const todayRevenue = todayOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
+    const monthRevenue = monthOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
+    const yearRevenue = yearOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
     
     doc.setFontSize(14);
     doc.setTextColor(92, 61, 46);
@@ -1575,7 +1618,7 @@ function downloadReport(period) {
     const pendingOrders = filteredOrders.filter(o => o.status === 'pending').length;
     const customOrders = filteredOrders.filter(o => o.order_type === 'custom').length;
     const deliveredOrders = filteredOrders.filter(o => o.status === 'delivered').length;
-    const totalRevenue = filteredOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const totalRevenue = filteredOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
     
     doc.setFontSize(14);
     doc.setTextColor(92, 61, 46);
