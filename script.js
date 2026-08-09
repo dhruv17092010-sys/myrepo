@@ -380,6 +380,10 @@ if (customForm && fileInput) {
 
             const orderId = generateOrderId();
 
+            // Get the current user's ID if they're signed in
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const userId = session?.user?.id || null;
+
             const { error } = await supabaseClient
                 .from('orders')
                 .insert([{
@@ -393,7 +397,8 @@ if (customForm && fileInput) {
                     cake_type:            cakeType,
                     cake_notes:           notes || null,
                     reference_image_url:  uploadedImageUrl || null,
-                    status:               'pending'
+                    status:               'pending',
+                    user_id:              userId
                     // Note: payment_method and whatsapp_updates are NOT sent to backend as requested
                 }]);
 
