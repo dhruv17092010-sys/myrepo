@@ -557,6 +557,6 @@ Before suggesting code changes, verify:
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 2024  
+**Document Version:** 1.1  
+**Last Updated:** 2026-08-09  
 **Maintained By:** Development Team
