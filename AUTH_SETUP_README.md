@@ -191,3 +191,9 @@ The updated policies ensure:
 - Ensure `supabase-config.js` has correct URL and anon key
 - Check browser console for specific error messages
 - Verify Supabase project is active
+
+---
+
+**Last Updated:** 2026-08-09  
+**Version:** 1.0  
+**Related Files:** account.html, supabase.sql, supabase-config.js
