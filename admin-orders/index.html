@@ -1264,7 +1264,7 @@ function updateRevenueChart() {
         
         const todayOrders = allOrders.filter(o => isToday(o.created_at));
         todayOrders.forEach(order => {
-            const hour = new Date(o.created_at).getHours();
+            const hour = new Date(order.created_at).getHours();
             const idx = Math.floor(hour / 4);
             if (idx >= 0 && idx < 6) {
                 data[idx] += getOrderTotal(order);
@@ -1277,7 +1277,7 @@ function updateRevenueChart() {
         
         const monthOrders = allOrders.filter(o => isThisMonth(o.created_at));
         monthOrders.forEach(order => {
-            const day = new Date(o.created_at).getDate();
+            const day = new Date(order.created_at).getDate();
             const weekIdx = Math.min(Math.floor((day - 1) / 7), 3);
             data[weekIdx] += getOrderTotal(order);
         });
@@ -1288,7 +1288,7 @@ function updateRevenueChart() {
         
         const yearOrders = allOrders.filter(o => isThisYear(o.created_at));
         yearOrders.forEach(order => {
-            const month = new Date(o.created_at).getMonth();
+            const month = new Date(order.created_at).getMonth();
             data[month] += getOrderTotal(order);
         });
     }
