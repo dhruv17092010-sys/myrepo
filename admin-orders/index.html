@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <!-- Load credentials from the same config file as the main site -->
     <script src="../supabase-config.js"></script>
 
@@ -207,6 +210,7 @@
         .stat-icon.pending { background: #fde9cc; }
         .stat-icon.custom  { background: #d4edda; }
         .stat-icon.today   { background: #dce8ff; }
+        .stat-icon.revenue { background: #d4edda; }
 
         .stat-info h3 {
             font-size: 1.6rem;
@@ -219,6 +223,164 @@
             font-size: 0.78rem;
             color: var(--text-light);
             margin-top: 2px;
+        }
+
+        /* ── Revenue Stats ────────────────────────────────────── */
+        .revenue-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .revenue-card {
+            background: white;
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .revenue-card h4 {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .revenue-card .amount {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .revenue-card .period {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        /* ── Charts Section ────────────────────────────────────── */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 14px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            color: var(--brown);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* ── Product Stats ────────────────────────────────────── */
+        .product-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .product-stat-card {
+            background: white;
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .product-stat-card.most-sold { border-left: 4px solid var(--green); }
+        .product-stat-card.least-sold { border-left: 4px solid var(--orange); }
+
+        .product-stat-card h4 {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .product-stat-card .product-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--brown);
+            margin-bottom: 0.25rem;
+        }
+
+        .product-stat-card .product-qty {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        /* ── Report Controls ────────────────────────────────────── */
+        .report-controls {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .report-btn {
+            background: white;
+            border: 1.5px solid var(--border);
+            color: var(--text-light);
+            padding: 0.55rem 1.1rem;
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+        }
+
+        .report-btn:hover { border-color: var(--pink-dark); color: var(--pink-dark); }
+        .report-btn.primary { background: var(--pink-dark); color: white; border-color: var(--pink-dark); }
+        .report-btn.primary:hover { background: #b86478; }
+
+        .time-filter {
+            display: flex;
+            gap: 0.5rem;
+            background: white;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 0.3rem;
+        }
+
+        .time-btn {
+            padding: 0.45rem 1rem;
+            border: none;
+            background: none;
+            border-radius: 7px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .time-btn.active {
+            background: var(--pink-dark);
+            color: white;
         }
 
         /* ── Filters & Controls ─────────────────────────────── */
@@ -579,6 +741,10 @@
             .stat-info h3 { font-size: 1.3rem; }
             .customer-info { gap: 0.75rem; }
 
+            .revenue-stats { grid-template-columns: 1fr; }
+            .product-stats { grid-template-columns: 1fr; }
+            .charts-section { grid-template-columns: 1fr; }
+
             /* Controls: stack filter tabs above a full-width refresh button */
             .controls-row {
                 flex-direction: column;
@@ -600,6 +766,9 @@
             .order-body { padding: 1rem; }
 
             .cake-detail-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+            
+            .report-controls { flex-direction: column; align-items: stretch; }
+            .time-filter { justify-content: center; }
         }
 
         @media (max-width: 380px) {
@@ -690,6 +859,100 @@
             </div>
         </div>
 
+        <!-- Revenue Stats -->
+        <div class="revenue-stats">
+            <div class="revenue-card">
+                <h4><i class="fas fa-calendar-day"></i> Today</h4>
+                <div class="amount" id="revenueToday">₹0</div>
+                <div class="period">Daily Revenue</div>
+            </div>
+            <div class="revenue-card">
+                <h4><i class="fas fa-calendar-alt"></i> This Month</h4>
+                <div class="amount" id="revenueMonth">₹0</div>
+                <div class="period">Monthly Revenue</div>
+            </div>
+            <div class="revenue-card">
+                <h4><i class="fas fa-calendar"></i> This Year</h4>
+                <div class="amount" id="revenueYear">₹0</div>
+                <div class="period">Yearly Revenue</div>
+            </div>
+        </div>
+
+        <!-- Report Controls -->
+        <div class="report-controls">
+            <div class="time-filter">
+                <button class="time-btn active" data-period="day">Day</button>
+                <button class="time-btn" data-period="month">Month</button>
+                <button class="time-btn" data-period="year">Year</button>
+            </div>
+            <button class="report-btn primary" id="downloadReportBtn">
+                <i class="fas fa-file-pdf"></i> Download Report
+            </button>
+            <button class="report-btn" id="refreshStatsBtn">
+                <i class="fas fa-sync-alt"></i> Refresh Stats
+            </button>
+        </div>
+
+        <!-- Product Stats -->
+        <div class="product-stats">
+            <div class="product-stat-card most-sold">
+                <h4><i class="fas fa-trophy"></i> Most Sold</h4>
+                <div class="product-name" id="mostSoldProduct">—</div>
+                <div class="product-qty" id="mostSoldQty">0 units</div>
+            </div>
+            <div class="product-stat-card least-sold">
+                <h4><i class="fas fa-chart-line"></i> Least Sold</h4>
+                <div class="product-name" id="leastSoldProduct">—</div>
+                <div class="product-qty" id="leastSoldQty">0 units</div>
+            </div>
+        </div>
+
+        <!-- Revenue by Product Stats -->
+        <div class="product-stats" style="margin-top:1rem;">
+            <div class="product-stat-card most-sold" style="border-left-color:#c9788a;">
+                <h4><i class="fas fa-coins"></i> Highest Revenue Product</h4>
+                <div class="product-name" id="highestRevenueProduct">—</div>
+                <div class="product-qty" id="highestRevenueAmount">₹0</div>
+            </div>
+            <div class="product-stat-card least-sold" style="border-left-color:#e05c5c;">
+                <h4><i class="fas fa-coins"></i> Lowest Revenue Product</h4>
+                <div class="product-name" id="lowestRevenueProduct">—</div>
+                <div class="product-qty" id="lowestRevenueAmount">₹0</div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="chart-card">
+                <h3><i class="fas fa-chart-bar"></i> Revenue Overview</h3>
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3><i class="fas fa-chart-pie"></i> Order Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="orderPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Revenue Charts Section -->
+        <div class="charts-section" style="margin-top:1rem;">
+            <div class="chart-card">
+                <h3><i class="fas fa-chart-bar"></i> Revenue by Product (Top 5)</h3>
+                <div class="chart-container">
+                    <canvas id="productRevenueBarChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3><i class="fas fa-chart-pie"></i> Revenue Share by Product</h3>
+                <div class="chart-container">
+                    <canvas id="productRevenuePieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <!-- Controls -->
         <div class="controls-row">
             <div class="filter-tabs">
@@ -749,6 +1012,13 @@ try {
 let allOrders      = [];
 let currentFilter  = 'all';
 let pendingDeleteId = null;
+let currentTimePeriod = 'day'; // day, month, year
+
+// Chart instances
+let revenueChartInstance = null;
+let orderPieChartInstance = null;
+let productRevenueBarChartInstance = null;
+let productRevenuePieChartInstance = null;
 
 // ── Helpers ──────────────────────────────────────────────────
 function showToast(msg) {
@@ -772,6 +1042,42 @@ function isToday(iso) {
     const d = new Date(iso);
     const today = new Date();
     return d.toDateString() === today.toDateString();
+}
+
+function isThisMonth(iso) {
+    if (!iso) return false;
+    const d = new Date(iso);
+
+// Chart instances
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+}
+
+function isThisYear(iso) {
+    if (!iso) return false;
+    const d = new Date(iso);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear();
+}
+
+function formatCurrency(amount) {
+    return '₹' + (amount || 0).toLocaleString('en-IN');
+}
+
+// Get date range based on period
+function getDateRange(period) {
+    const now = new Date();
+    let start, end = now;
+    
+    if (period === 'day') {
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    } else if (period === 'month') {
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else if (period === 'year') {
+        start = new Date(now.getFullYear(), 0, 1);
+    }
+    
+    return { start, end };
 }
 
 // ── Auth ─────────────────────────────────────────────────────
@@ -853,12 +1159,212 @@ async function loadOrders() {
     }
 }
 
+
+// Get order total including custom cake calculation (₹800/kg)
+function getOrderTotal(order) {
+    if (order.order_type === 'custom') {
+        const weight = parseFloat(order.cake_weight) || 0;
+        return weight * 800;
+    }
+    return order.total || 0;
+}
 // ── Stats ────────────────────────────────────────────────────
 function updateStats() {
     document.getElementById('statTotal').textContent   = allOrders.length;
     document.getElementById('statPending').textContent = allOrders.filter(o => o.status === 'pending').length;
     document.getElementById('statCustom').textContent  = allOrders.filter(o => o.order_type === 'custom').length;
     document.getElementById('statToday').textContent   = allOrders.filter(o => isToday(o.created_at)).length;
+    
+    // Update revenue stats
+    updateRevenueStats();
+    
+    // Update product stats
+    updateProductStats();
+    
+    // Update charts
+    updateCharts();
+}
+
+function updateRevenueStats() {
+    const todayOrders = allOrders.filter(o => isToday(o.created_at));
+    const monthOrders = allOrders.filter(o => isThisMonth(o.created_at));
+    const yearOrders = allOrders.filter(o => isThisYear(o.created_at));
+    
+    const todayRevenue = todayOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
+    const monthRevenue = monthOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
+    const yearRevenue = yearOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
+    
+    document.getElementById('revenueToday').textContent = formatCurrency(todayRevenue);
+    document.getElementById('revenueMonth').textContent = formatCurrency(monthRevenue);
+    document.getElementById('revenueYear').textContent = formatCurrency(yearRevenue);
+}
+
+function updateProductStats() {
+    const period = currentTimePeriod;
+    const { start, end } = getDateRange(period);
+    
+    // Filter orders by period
+    const filteredOrders = allOrders.filter(o => {
+        const orderDate = new Date(o.created_at);
+        return orderDate >= start && orderDate <= end;
+    });
+    
+    // Count products
+    const productCounts = {};
+    
+    filteredOrders.forEach(order => {
+        if (order.order_type === 'regular' && Array.isArray(order.items)) {
+            order.items.forEach(item => {
+                const name = item.name || 'Unknown';
+                productCounts[name] = (productCounts[name] || 0) + (item.qty || 0);
+            });
+        } else if (order.order_type === 'custom') {
+            // Treat custom cake as a product
+            const cakeName = `Custom Cake (${order.cake_flavor || 'Mixed'})`;
+            const weight = order.cake_weight || 1;
+            productCounts[cakeName] = (productCounts[cakeName] || 0) + parseFloat(weight);
+        }
+    });
+    
+    // Find most and least sold
+    const entries = Object.entries(productCounts);
+    if (entries.length === 0) {
+        document.getElementById('mostSoldProduct').textContent = '—';
+        document.getElementById('mostSoldQty').textContent = '0 units';
+        document.getElementById('leastSoldProduct').textContent = '—';
+        document.getElementById('leastSoldQty').textContent = '0 units';
+        return;
+    }
+    
+    entries.sort((a, b) => b[1] - a[1]);
+    const mostSold = entries[0];
+    const leastSold = entries[entries.length - 1];
+    
+    document.getElementById('mostSoldProduct').textContent = mostSold[0];
+    document.getElementById('mostSoldQty').textContent = mostSold[1] + ' units';
+    document.getElementById('leastSoldProduct').textContent = leastSold[0];
+    document.getElementById('leastSoldQty').textContent = leastSold[1] + ' units';
+}
+
+function updateCharts() {
+    updateRevenueChart();
+    updateOrderPieChart();
+}
+
+function updateRevenueChart() {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    const period = currentTimePeriod;
+    
+    let labels, data;
+    
+    if (period === 'day') {
+        // Hourly revenue for today
+        labels = ['6AM', '9AM', '12PM', '3PM', '6PM', '9PM'];
+        data = [0, 0, 0, 0, 0, 0];
+        
+        const todayOrders = allOrders.filter(o => isToday(o.created_at));
+        todayOrders.forEach(order => {
+            const hour = new Date(o.created_at).getHours();
+            const idx = Math.floor(hour / 4);
+            if (idx >= 0 && idx < 6) {
+                data[idx] += getOrderTotal(order);
+            }
+        });
+    } else if (period === 'month') {
+        // Daily revenue for this month (grouped by weeks)
+        labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+        data = [0, 0, 0, 0];
+        
+        const monthOrders = allOrders.filter(o => isThisMonth(o.created_at));
+        monthOrders.forEach(order => {
+            const day = new Date(o.created_at).getDate();
+            const weekIdx = Math.min(Math.floor((day - 1) / 7), 3);
+            data[weekIdx] += getOrderTotal(order);
+        });
+    } else {
+        // Monthly revenue for this year
+        labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        
+        const yearOrders = allOrders.filter(o => isThisYear(o.created_at));
+        yearOrders.forEach(order => {
+            const month = new Date(o.created_at).getMonth();
+            data[month] += getOrderTotal(order);
+        });
+    }
+    
+    if (revenueChartInstance) {
+        revenueChartInstance.destroy();
+    }
+    
+    revenueChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Revenue (₹)',
+                data: data,
+                backgroundColor: '#c9788a',
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: value => '₹' + value.toLocaleString('en-IN')
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateOrderPieChart() {
+    const ctx = document.getElementById('orderPieChart').getContext('2d');
+    const period = currentTimePeriod;
+    const { start, end } = getDateRange(period);
+    
+    // Filter orders by period
+    const filteredOrders = allOrders.filter(o => {
+        const orderDate = new Date(o.created_at);
+        return orderDate >= start && orderDate <= end;
+    });
+    
+    // Count by type
+    const regularCount = filteredOrders.filter(o => o.order_type === 'regular').length;
+    const customCount = filteredOrders.filter(o => o.order_type === 'custom').length;
+    
+    if (orderPieChartInstance) {
+        orderPieChartInstance.destroy();
+    }
+    
+    orderPieChartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Regular Orders', 'Custom Cakes'],
+            datasets: [{
+                data: [regularCount, customCount],
+                backgroundColor: ['#f7cac9', '#d4edda'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
 }
 
 // ── Render Orders ────────────────────────────────────────────
@@ -1045,6 +1551,152 @@ document.querySelectorAll('.filter-tab').forEach(tab => {
         currentFilter = tab.dataset.filter;
         renderOrders();
     });
+});
+
+// ── Time Period Buttons ───────────────────────────────────────
+document.querySelectorAll('.time-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTimePeriod = btn.dataset.period;
+        updateProductStats();
+        updateCharts();
+    });
+});
+
+// ── Download Report ───────────────────────────────────────────
+document.getElementById('downloadReportBtn').addEventListener('click', () => {
+    downloadReport(currentTimePeriod);
+});
+
+function downloadReport(period) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    const now = new Date();
+    let periodLabel = '';
+    if (period === 'day') periodLabel = 'Daily';
+    else if (period === 'month') periodLabel = 'Monthly';
+    else periodLabel = 'Yearly';
+    
+    // Title
+    doc.setFontSize(18);
+    doc.setTextColor(92, 61, 46);
+    doc.text('Velvet Whisk - Order Report', 105, 20, null, null, 'center');
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+    doc.text(`${periodLabel} Report - ${now.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, 105, 30, null, null, 'center');
+    
+    // Revenue Summary
+    const todayOrders = allOrders.filter(o => isToday(o.created_at));
+    const monthOrders = allOrders.filter(o => isThisMonth(o.created_at));
+    const yearOrders = allOrders.filter(o => isThisYear(o.created_at));
+    
+    const todayRevenue = todayOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
+    const monthRevenue = monthOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
+    const yearRevenue = yearOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
+    
+    doc.setFontSize(14);
+    doc.setTextColor(92, 61, 46);
+    doc.text('Revenue Summary', 14, 50);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Today's Revenue: ${formatCurrency(todayRevenue)}`, 14, 60);
+    doc.text(`This Month: ${formatCurrency(monthRevenue)}`, 14, 68);
+    doc.text(`This Year: ${formatCurrency(yearRevenue)}`, 14, 76);
+    
+    // Order Stats
+    const { start, end } = getDateRange(period);
+    const filteredOrders = allOrders.filter(o => {
+        const orderDate = new Date(o.created_at);
+        return orderDate >= start && orderDate <= end;
+    });
+    
+    const totalOrders = filteredOrders.length;
+    const pendingOrders = filteredOrders.filter(o => o.status === 'pending').length;
+    const customOrders = filteredOrders.filter(o => o.order_type === 'custom').length;
+    const deliveredOrders = filteredOrders.filter(o => o.status === 'delivered').length;
+    const totalRevenue = filteredOrders.reduce((sum, o) => sum + getOrderTotal(o), 0);
+    
+    doc.setFontSize(14);
+    doc.setTextColor(92, 61, 46);
+    doc.text(`Order Statistics (${periodLabel})`, 14, 95);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    const statsData = [
+        ['Total Orders', totalOrders.toString()],
+        ['Pending Orders', pendingOrders.toString()],
+        ['Custom Cakes', customOrders.toString()],
+        ['Delivered Orders', deliveredOrders.toString()],
+        ['Total Revenue', formatCurrency(totalRevenue)]
+    ];
+    
+    doc.autoTable({
+        startY: 100,
+        head: [['Metric', 'Value']],
+        body: statsData,
+        theme: 'striped',
+        headStyles: { fillColor: [247, 202, 201] },
+        margin: { left: 14, right: 14 }
+    });
+    
+    // Product Stats
+    const productCounts = {};
+    filteredOrders.forEach(order => {
+        if (order.order_type === 'regular' && Array.isArray(order.items)) {
+            order.items.forEach(item => {
+                const name = item.name || 'Unknown';
+                productCounts[name] = (productCounts[name] || 0) + (item.qty || 0);
+            });
+        } else if (order.order_type === 'custom') {
+            const cakeName = `Custom Cake (${order.cake_flavor || 'Mixed'})`;
+            const weight = order.cake_weight || 1;
+            productCounts[cakeName] = (productCounts[cakeName] || 0) + parseFloat(weight);
+        }
+    });
+    
+    const entries = Object.entries(productCounts).sort((a, b) => b[1] - a[1]);
+    
+    if (entries.length > 0) {
+        const finalY = doc.lastAutoTable.finalY + 15;
+        doc.setFontSize(14);
+        doc.setTextColor(92, 61, 46);
+        doc.text('Product Performance', 14, finalY);
+        
+        const productData = entries.slice(0, 10).map(([name, qty]) => [name, qty.toString()]);
+        
+        doc.autoTable({
+            startY: finalY + 5,
+            head: [['Product', 'Quantity Sold']],
+            body: productData,
+            theme: 'striped',
+            headStyles: { fillColor: [201, 120, 138] },
+            margin: { left: 14, right: 14 }
+        });
+    }
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Generated on ${new Date().toLocaleString('en-IN')} | Page ${i} of ${pageCount}`, 105, 290, null, null, 'center');
+    }
+    
+    // Save
+    const filename = `velvet-whisk-${periodLabel.toLowerCase()}-report-${now.toISOString().split('T')[0]}.pdf`;
+    doc.save(filename);
+    showToast('📄 Report downloaded successfully');
+}
+
+// ── Refresh Stats ───────────────────────────────────────────────────
+document.getElementById('refreshStatsBtn').addEventListener('click', () => {
+    updateStats();
+    showToast('🔄 Stats refreshed');
 });
 
 // ── Refresh ───────────────────────────────────────────────────
